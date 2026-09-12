@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>URL Manager</title>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="app.css">
+        <style>
+
+        </style>
+    </head>
+    <body>
+        <header>
+            <!-- ハンバーガーボタン(後から押した際の動作を追加する) -->
+            <i class="fa fa-bars" aria-hidden="true"></i>
+        </header>
+        <main>
+            <!-- タイルを並べる -->
+            <section class="section-tiles">
+                <!-- JSでタイルの見た目を挿入 -->            
+            </section>
+
+            <!--EDIT画面-->
+            <section class="section-record-panel panel close">
+                <form action="" method="post">
+                    <div class="form-top-ber">
+                        <span>タイル編集</span>
+                        <button type="button" class="close-button"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div class="form-main">
+                        <div class="form-img">
+                            <!-- JSからファビコンを挿入 -->
+                            <img  src="" class="favicon-img"></img>
+                        </div>
+                        <div class="form-url">
+                            <label for="url">URL</label>
+                            <input type="url" name="url" id="url">
+                        </div>
+                        <div class="form-name">
+                            <label for="name">名前</label>
+                            <input type="text" name="name" id="name">
+                        </div>
+                        <div class="form-memo">
+                            <label for="memo">メモ</label><br>
+                            <textarea name="memo" id="memo"></textarea>
+                        </div>
+                        <div class="form-checkbox">
+                            <label for="title-on-name">タイルに名前を表示</label>
+                            <input type="checkbox" name="title-on-name" id="title-on-name">
+                        </div>
+                        <div class="form-checkbox">
+                            <label for="another-window">新しいウィンドウで開く</label>
+                            <input type="checkbox" name="another-window" id="another-window">
+                        </div>
+                    </div>
+                    <div class="from-save-button">
+                        <button type="submit">保存</button>
+                    </div>
+                </form>
+            </section>
+
+            <!--urlが登録してあるタイルを右クリックしたときに出すメニュー-->
+            <section class="section-rightclick-panel panel close">
+                <div class="rightclick-panel-top-ber">
+                    <button type="button" class="close-button"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="rightclick-panel-main">
+                    <p class="rightclick-panel-name"></p>
+                    <p class="rightclick-panel-url"></p>
+                    <p class="rightclick-panel-memo"></p>
+                </div>
+                <div class="rightclick-panel-buttons">
+                    <button type="button" class="edit-button">編集</button>
+                    <button type="button" class="delete-button">削除</button>     
+                </div>
+            </section>
+
+            <!-- パネルを開いているときに、押したらパネルが消える背景 -->
+            <section>
+                <div class="panel-background panel close"></div>
+            </section>
+        </main>
+        <script src="main.js"></script>
+    </body>
+</html>
