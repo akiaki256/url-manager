@@ -201,11 +201,11 @@ function recordPanelOpen(tilesArray) {
     urlInput.value = tilesArray[activeIndex].url;
     nameInput.value = tilesArray[activeIndex].name;
     memoInput.value = tilesArray[activeIndex].memo;
-    // もしURLがすでに登録されていれば、ファビコン画像を取りに行って埋め込む
-    if (tilesArray[activeIndex].url !== '') {
-        faviconImg.src = convertToFavicon(tilesArray[activeIndex].url);
+    // もしURL空なら"img/noimage.png"を表示、URLがあればファビコン画像を取りに行って埋め込む
+    if (tilesArray[activeIndex].url === '') {
+        faviconImg.src = "img/noimage.png";
     } else {
-        faviconImg.src = '';
+        faviconImg.src = convertToFavicon(tilesArray[activeIndex].url);
     }
     // チェックリストのcheckedをつける
     tileOnName.checked = tilesArray[activeIndex].tileOnName;
@@ -300,12 +300,17 @@ function clickPanelOut() {
 // イベントキャッチ：URL入力欄に変化があったら
 function faviconUpdate() {
     urlInput.addEventListener('change', () => {
-        if (urlInput.value !== '') {
+        // ちゃんとURLの形入力されていたらファビコン画像を取りに行って埋め込む
+        if  (urlInput.value.startsWith('http://') || urlInput.value.startsWith('https://')){
             try {
-                faviconImg.src = convertToFavicon(urlInput.value)
+                faviconImg.src = convertToFavicon(urlInput.value);
             } catch {
-                faviconImg.src = '';
+                faviconImg.src = "img/noimage.png";
             }
+        }
+        // それ以外の場合は"img/noimage.png"を表示
+        else {
+            faviconImg.src = "img/noimage.png";
         }
     })
 }
