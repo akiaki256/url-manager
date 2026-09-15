@@ -21,7 +21,7 @@ main .section-tiles {
     display: grid;
     justify-content: center;
     padding: 20px;
-    grid-template-columns: repeat(10, 80px);
+    grid-template-columns: repeat(20, 80px);
     align-content: flex-start;
     gap: 8px;
 
@@ -29,7 +29,7 @@ main .section-tiles {
         width: 80px;
         height: 80px;
         border-radius: 20px;
-        background-color: #1e1e1e;
+        background-color: #252526;
         border: 1px  #414141 solid;
         &:hover  {
             background-color: #686868;
@@ -42,7 +42,7 @@ main .section-tiles {
             width: 100%;
         }
         i {
-            color: #1e1e1e;
+            color: #252526;
             font-size: 40px;              
         }
         .tile-url-image {

@@ -10,7 +10,7 @@ function tilesLoad() {
         tilesArray = JSON.parse(saved); 
     } else {
         tilesArray = [];
-        const squares = 90;
+        const squares = 180;
         for (let i=0; i<squares; i++) {
             tilesArray.push({ url: "", name: "", memo: "", tileOnName: false, anotherWindow: false});
         }
