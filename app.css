@@ -25,7 +25,7 @@ main .section-tiles {
     align-content: flex-start;
     gap: 8px;
 
-    .tile {
+    .link-tile {
         width: 80px;
         height: 80px;
         border-radius: 20px;

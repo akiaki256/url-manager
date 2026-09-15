@@ -15,7 +15,7 @@ function tilesLoad() {
             tiles.push({ 
                 type: "linkTile",
                 index: i,
-                cells: "",
+                cells: [[],[]],
                 width: "",
                 height: "",
                 link: {
@@ -35,13 +35,14 @@ function makeTile(tiles) {
     // 要素を初期化
     sectionTiles.innerHTML = "";
     const occupied = new Set(); 
+
     // タイル生成をデータ数だけループ
     for (let i = 0; i < tiles.length; i++) {
         // もしoccupiedの中にiがあればこの回をスキップ
         if (occupied.has(i)) continue;
         // typeがlinkTileならlinkタイルを作る
         if (tiles[i].type === "linkTile") { 
-            // <div class="tile">
+            // <div class="tile link-tile">
             //    <div class="tile-image">
             //      <img src="ファビコンURL">
             //      <i class="fa-regular fa-square-plus"></i>
@@ -50,7 +51,8 @@ function makeTile(tiles) {
 
             // アイコン全体タグを作成
             const tileTag = document.createElement('div');
-            tileTag.className = 'tile';
+            tileTag.classList.add('tile');
+            tileTag.classList.add('link-tile')
             tileTag.dataset.index = i; 
             tileTag.draggable = true;
             // アイコンの見た目用タグを作成
@@ -63,17 +65,17 @@ function makeTile(tiles) {
                 urlImage.className = 'tile-url-image'
                 urlImage.src = convertToFavicon(tiles[i].link.url);
                 // <div class="tile-image"></div>の中に入れ込む  
-                tileImage.appendChild(urlImage);
+                tileImage.append(urlImage);
             } //urlがないならアイコンに隠し+マークを仕込む
             else { 
                 const plus = document.createElement('i');
                 plus.className = "fa-regular fa-square-plus";
                 // <div class="tile-image"></div>の中に入れ込む
-                tileImage.appendChild(plus);
+                tileImage.append(plus);
             }
             // タグを統合 
-            tileTag.appendChild(tileImage);
-            sectionTiles.appendChild(tileTag);
+            tileTag.append(tileImage);
+            sectionTiles.append(tileTag);
 
             // もしtileOnNameがtrueなら名前をタイル上に表示
             if (tiles[i].link.tileOnName) {
@@ -81,16 +83,49 @@ function makeTile(tiles) {
                 tileOnName.classList = 'on-name';
                 //長過ぎるnameは省略表示に変えつつ挿入
                 tileOnName.textContent = truncate(tiles[i].link.name, 17);
-                tileTag.appendChild(tileOnName);
+                tileTag.append(tileOnName);
             }
             occupied.add(i);
         } 
-        // typeがmemoTileならlinkタイルを作る
-        else if (tiles[i].type === "memoTile") {
-                ;
-            }
-        }
+        // typeがtextTileならtextタイルを作る
+        else if (tiles[i].type === "textTile") {
+            // <div class="tile text-tile">
+            //    <div class="text-area-header">
+            //        <p>Memo</P>
+            //    <div/>
+            //    <textarea></textarea>     
+            // <div/>
+            const tileTag = document.createElement('div');
+            tileTag.classList.add('tile');
+            tileTag.classList.add('text-tile')
+            tileTag.dataset.index = i; 
+            tileTag.draggable = true;
 
+            const textAreaHeaderDiv = document.createElement('div');
+            textAreaHeaderDiv.classList.add('text-area-header');
+
+            const pTag = document.createElement('p');
+            pTag.textContent = "Memo";
+
+            const textAreaTag = document.createElement('textarea');
+
+            tileTag.append(textAreaHeaderDiv, textAreaTag);
+            textAreaHeaderDiv.append(pTag);
+
+            // CSS
+            if (tiles[i].width > 1) {
+                tileTag.style.gridColumn = 'span ' + tiles[i].width;
+            }
+            if (tiles[i].height > 1) {
+                tileTag.style.gridRow = 'span ' + tiles[i].height;
+            }
+            // 使用しているindexをoccupiedへ追加
+            for (const row of tiles[i].cells) { 
+                for (const cell of row) {            
+                    occupied.add(cell);
+                }
+            } 
+        }
     }
     console.log(sectionTiles);
 }
