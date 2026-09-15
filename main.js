@@ -37,60 +37,58 @@ function makeTile(tiles) {
     const occupied = new Set(); 
     // タイル生成をデータ数だけループ
     for (let i = 0; i < tiles.length; i++) {
-        // もしoccupiedの中にiがあればスキップ
-        if (i in occupied) {
-            ;
-        } else {
-            // typeがlinkTileならlinkタイルを作る
-            if (tiles[type] === linkTile) { 
-                // <div class="tile">
-                //    <div class="tile-image">
-                //      <img src="ファビコンURL">
-                //      <i class="fa-regular fa-square-plus"></i>
-                //    </div>    
-                // </div>
+        // もしoccupiedの中にiがあればこの回をスキップ
+        if (occupied.has(i)) continue;
+        // typeがlinkTileならlinkタイルを作る
+        if (tiles[i].type === "linkTile") { 
+            // <div class="tile">
+            //    <div class="tile-image">
+            //      <img src="ファビコンURL">
+            //      <i class="fa-regular fa-square-plus"></i>
+            //    </div>    
+            // </div>
 
-                // アイコン全体タグを作成
-                const tileTag = document.createElement('div');
-                tileTag.className = 'tile';
-                tileTag.dataset.index = i; 
-                tileTag.draggable = true;
-                // アイコンの見た目用タグを作成
-                const tileImage = document.createElement('div');
-                tileImage.className = 'tile-image';
-                // もしurlが入っていれば画像を取得してタイルに貼る
-                if (tiles[i].url !== "") {
-                    // urlをドメインに加工
-                    const urlImage = document.createElement('img');
-                    urlImage.className = 'tile-url-image'
-                    urlImage.src = convertToFavicon(tiles[i].url);
-                    // <div class="tile-image"></div>の中に入れ込む  
-                    tileImage.appendChild(urlImage);
-                } //urlがないならアイコンに隠し+マークを仕込む
-                else { 
-                    const plus = document.createElement('i');
-                    plus.className = "fa-regular fa-square-plus";
-                    // <div class="tile-image"></div>の中に入れ込む
-                    tileImage.appendChild(plus);
-                }
-                // タグを統合 
-                tileTag.appendChild(tileImage);
-                sectionTiles.appendChild(tileTag);
+            // アイコン全体タグを作成
+            const tileTag = document.createElement('div');
+            tileTag.className = 'tile';
+            tileTag.dataset.index = i; 
+            tileTag.draggable = true;
+            // アイコンの見た目用タグを作成
+            const tileImage = document.createElement('div');
+            tileImage.className = 'tile-image';
+            // もしurlが入っていれば画像を取得してタイルに貼る
+            if (tiles[i].link.url !== "") {
+                // urlをドメインに加工
+                const urlImage = document.createElement('img');
+                urlImage.className = 'tile-url-image'
+                urlImage.src = convertToFavicon(tiles[i].link.url);
+                // <div class="tile-image"></div>の中に入れ込む  
+                tileImage.appendChild(urlImage);
+            } //urlがないならアイコンに隠し+マークを仕込む
+            else { 
+                const plus = document.createElement('i');
+                plus.className = "fa-regular fa-square-plus";
+                // <div class="tile-image"></div>の中に入れ込む
+                tileImage.appendChild(plus);
+            }
+            // タグを統合 
+            tileTag.appendChild(tileImage);
+            sectionTiles.appendChild(tileTag);
 
-                // もしtileOnNameがtrueなら名前をタイル上に表示
-                if (tiles[i].tileOnName) {
-                    const tileOnName = document.createElement('p');
-                    tileOnName.classList = 'on-name';
-                    //長過ぎるnameは省略表示に変えつつ挿入
-                    tileOnName.textContent = truncate(tiles[i].name, 17);
-                    tileTag.appendChild(tileOnName);
-                }
-                occupied.add(i);
-            } 
-            // typeがmemoTileならlinkタイルを作る
-            else if (tiles[type] === memoTile) {
-                    ;
-                }
+            // もしtileOnNameがtrueなら名前をタイル上に表示
+            if (tiles[i].link.tileOnName) {
+                const tileOnName = document.createElement('p');
+                tileOnName.classList = 'on-name';
+                //長過ぎるnameは省略表示に変えつつ挿入
+                tileOnName.textContent = truncate(tiles[i].link.name, 17);
+                tileTag.appendChild(tileOnName);
+            }
+            occupied.add(i);
+        } 
+        // typeがmemoTileならlinkタイルを作る
+        else if (tiles[i].type === "memoTile") {
+                ;
+            }
         }
 
     }
@@ -132,11 +130,11 @@ function tileLeftClick(tiles) {
         // タイルの上でなかったら無視
         if (activeIndex === null) {return};
         // tilesからactiveIndexで探し、urlの有無を確認して分岐                
-        if (tiles[activeIndex].url !== '') {
-            if (tiles[activeIndex].anotherWindow === true) {
-                window.open(tiles[activeIndex].url, '_blank', 'width=1080,height=960');
+        if (tiles[activeIndex].link.url !== '') {
+            if (tiles[activeIndex].link.anotherWindow === true) {
+                window.open(tiles[activeIndex].link.url, '_blank', 'width=1080,height=960');
             } else {
-                window.open(tiles[activeIndex].url, '_blank');
+                window.open(tiles[activeIndex].link.url, '_blank');
             }
         } else {
             // urlがなかったら".record-panel"を表示
@@ -153,7 +151,7 @@ function tileRightClick(tiles) {
         // タイルの上でなかったら無視
         if (activeIndex === null) {return};
         //urlが登録してあるならメニューを出す
-        if (tiles[activeIndex].url !== '') {
+        if (tiles[activeIndex].link.url !== '') {
             // 標準メニューをブロック
             event.preventDefault(); 
             // 開いているパネルを全て閉じから処理に入る
@@ -161,9 +159,9 @@ function tileRightClick(tiles) {
             // クリックしたらパネルが閉じる層を出す
             panelOutOpen();
             // 長過ぎるurlとnameは省略表示に変えつつ挿入
-            rightclickPanelName.textContent = truncate(tiles[activeIndex].name, 11);
-            rightclickPanelUrl.textContent = truncate(tiles[activeIndex].url, 24);
-            rightclickPanelMemo.textContent = tiles[activeIndex].memo;
+            rightclickPanelName.textContent = truncate(tiles[activeIndex].link.name, 11);
+            rightclickPanelUrl.textContent = truncate(tiles[activeIndex].link.url, 24);
+            rightclickPanelMemo.textContent = tiles[activeIndex].link.memo;
             // スタイルにクリックした座標を渡す
             rightClickPanel.style.left = event.clientX + "px";
             rightClickPanel.style.top = event.clientY + "px";
@@ -226,18 +224,18 @@ function recordPanelOpen(tiles) {
     // クリックしたらパネルが閉じる層を出す
     panelOutOpen();
     // 入力欄にtilesの値を入れる
-    urlInput.value = tiles[activeIndex].url;
-    nameInput.value = tiles[activeIndex].name;
-    memoInput.value = tiles[activeIndex].memo;
+    urlInput.value = tiles[activeIndex].link.url;
+    nameInput.value = tiles[activeIndex].link.name;
+    memoInput.value = tiles[activeIndex].link.memo;
     // もしURL空なら"img/noimage.png"を表示、URLがあればファビコン画像を取りに行って埋め込む
-    if (tiles[activeIndex].url === '') {
+    if (tiles[activeIndex].link.url === '') {
         faviconImg.src = "img/noimage.png";
     } else {
-        faviconImg.src = convertToFavicon(tiles[activeIndex].url);
+        faviconImg.src = convertToFavicon(tiles[activeIndex].link.url);
     }
     // チェックリストのcheckedをつける
-    tileOnName.checked = tiles[activeIndex].tileOnName;
-    anotherWindow.checked = tiles[activeIndex].anotherWindow;
+    tileOnName.checked = tiles[activeIndex].link.tileOnName;
+    anotherWindow.checked = tiles[activeIndex].link.anotherWindow;
     // ".record-panel"を表示させる
     recordPanel.classList.remove('close');
     recordPanel.classList.add('show'); 
@@ -280,11 +278,11 @@ function deleteButton(tiles)  {
     const deleteButton = document.querySelector('.delete-button');
     deleteButton.addEventListener('click', () => {
         // 値をtilesオブジェクトのi番目に空の値を入れる
-        tiles[activeIndex].url = "";
-        tiles[activeIndex].name = "";
-        tiles[activeIndex].memo = "";
-        tiles[activeIndex].tileOnName = false;
-        tiles[activeIndex].anotherWindow = false;
+        tiles[activeIndex].link.url = "";
+        tiles[activeIndex].link.name = "";
+        tiles[activeIndex].link.memo = "";
+        tiles[activeIndex].link.tileOnName = false;
+        tiles[activeIndex].link.anotherWindow = false;
         // localStorageに保存する
         localStorageSave(tiles);
         // 新しくタイルを再構築
@@ -301,11 +299,11 @@ function formSend(tiles) {
         // 'http://'で始まらないURLが入力されていたら送信を取り消す
         if (urlInput.value.startsWith('http://') || urlInput.value.startsWith('https://')) {
             // tileArrayのactionIndex番目に値を入れる
-            tiles[activeIndex].url = urlInput.value;
-            tiles[activeIndex].name = nameInput.value;
-            tiles[activeIndex].memo = memoInput.value;
-            tiles[activeIndex].tileOnName = tileOnName.checked;
-            tiles[activeIndex].anotherWindow = anotherWindow.checked;
+            tiles[activeIndex].link.url = urlInput.value;
+            tiles[activeIndex].link.name = nameInput.value;
+            tiles[activeIndex].link.memo = memoInput.value;
+            tiles[activeIndex].link.tileOnName = tileOnName.checked;
+            tiles[activeIndex].link.anotherWindow = anotherWindow.checked;
             // localStorageに保存する
             localStorageSave(tiles);
             // 新しくタイルを再構築
