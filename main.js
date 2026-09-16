@@ -16,8 +16,8 @@ function tilesLoad() {
                 type: "none",
                 index: i,
                 cells: [[],[]],
-                width: "",
-                height: "",
+                width: 0,
+                height: 0,
                 link: {
                     url: "", 
                     name: "", 
@@ -100,7 +100,7 @@ function makeTile(tiles) {
 
             const tileTag = document.createElement('div');
             tileTag.classList.add('tile');
-            tileTag.classList.add('text-tile')
+            tileTag.classList.add('text-tile');
             tileTag.dataset.index = i; 
             tileTag.draggable = true;
 
@@ -114,6 +114,7 @@ function makeTile(tiles) {
 
             tileTag.append(textAreaHeaderDiv, textAreaTag);
             textAreaHeaderDiv.append(pTag);
+            sectionTiles.append(tileTag);
 
             // CSS
             if (tiles[i].width > 1) {
@@ -301,21 +302,6 @@ function recordPanelOpen(tiles) {
     recordPanel.classList.remove('close');
     recordPanel.classList.add('show'); 
 }
-
-// text-edit-panelを出す関数
-function textTilePanelOpen() {
-    // 開いているパネルを全て閉じから処理に入る
-    closePanel();
-    // 全タイルのボーダーをリセット
-    resetBorder();
-    // クリックしたらパネルが閉じる層を出す
-    panelOutOpen();
-
-    textTilePanel.classList.remove("close");
-    textTilePanel.classList.add("show");
-}
-
-
 // 開いている.panelを全て閉じる関数
 function closePanel() {
     const panels = document.querySelectorAll(".panel");
@@ -342,11 +328,22 @@ function closeButton() {
         });
     }
 }
-// イベントキャッチ：text-editボタンが押されたら
+// イベントキャッチ：text-editボタンが押されたら1*1のテキストタイルを作成
 function textEditButton() {
     const textEditButton = document.querySelector('.text-edit-button')
     textEditButton.addEventListener('click', () => {   
-        textTilePanelOpen();
+
+        tiles[activeIndex].type = "textTile";
+        tiles[activeIndex].index = activeIndex;
+        tiles[activeIndex].cells[0][0] = activeIndex;
+        tiles[activeIndex].width = 1;
+        tiles[activeIndex].height = 1;
+        // localStorageに保存する
+        localStorageSave(tiles);
+        // 新しくタイルを再構築
+        makeTile(tiles);
+        // パネルを閉じる
+        closePanel();
     })
 }
 // イベントキャッチ：EDITボタンが押されたら
