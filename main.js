@@ -13,7 +13,7 @@ function tilesLoad() {
         const squares = 180; 
         for (let i=0; i<squares; i++) {
             tiles.push({ 
-                type: "linkTile",
+                type: "none",
                 index: i,
                 cells: [[],[]],
                 width: "",
@@ -41,7 +41,8 @@ function makeTile(tiles) {
         // もしoccupiedの中にiがあればこの回をスキップ
         if (occupied.has(i)) continue;
         // typeがlinkTileならlinkタイルを作る
-        if (tiles[i].type === "linkTile") { 
+        if (tiles[i].type === "linkTile" ||tiles[i].type === "none") { 
+
             // <div class="tile link-tile">
             //    <div class="tile-image">
             //      <img src="ファビコンURL">
@@ -89,12 +90,14 @@ function makeTile(tiles) {
         } 
         // typeがtextTileならtextタイルを作る
         else if (tiles[i].type === "textTile") {
+
             // <div class="tile text-tile">
             //    <div class="text-area-header">
             //        <p>Memo</P>
             //    <div/>
             //    <textarea></textarea>     
             // <div/>
+
             const tileTag = document.createElement('div');
             tileTag.classList.add('tile');
             tileTag.classList.add('text-tile')
@@ -153,6 +156,14 @@ function truncate(text, limit) {
     if (text.length <= limit) return text;
     return text.slice(0, limit) + '...';
 }
+// 全タイルのボーダーをリセット
+function resetBorder() {
+    const allTiles = document.querySelectorAll('.tile');
+    // 全タイルのボーダーをリセット
+    for (const tile of allTiles) {
+        tile.style.border = "";
+    }
+}
 
 // =============== < タイルをクリックしたときの処理 > ===============
 
@@ -164,16 +175,24 @@ function tileLeftClick(tiles) {
         activeIndex = indexFromEvent(event); 
         // タイルの上でなかったら無視
         if (activeIndex === null) {return};
-        // tilesからactiveIndexで探し、urlの有無を確認して分岐                
-        if (tiles[activeIndex].link.url !== '') {
+        // typeが"linkTile"ならリンクを開く。
+        if (tiles[activeIndex].type === "linkTile") {
             if (tiles[activeIndex].link.anotherWindow === true) {
                 window.open(tiles[activeIndex].link.url, '_blank', 'width=1080,height=960');
             } else {
                 window.open(tiles[activeIndex].link.url, '_blank');
             }
-        } else {
-            // urlがなかったら".record-panel"を表示
-            recordPanelOpen(tiles);
+        } 
+        // typeが"none"ならタイルクリエイトメニューを開く
+        else if (tiles[activeIndex].type === "none") {
+            // クリックしたタイルの枠を光らせる
+            const activeTile = document.querySelector('[data-index="' + activeIndex + '"]');
+            activeTile.style.border = "1px #37b4fe solid";
+
+            // スタイルにクリックした座標を渡す
+            createPanel.style.left = event.clientX + "px";
+            createPanel.style.top = event.clientY + "px";
+            createPanelOpen();
         }
     });
 }
@@ -214,7 +233,6 @@ function tileDrag(tiles) {
     })
     //イベントキャッチ：ドラッグオーバー（'dragOverIndex'を、通過したタイルのインデックスに更新）
     sectionTiles.addEventListener('dragover', (event) => {
-        const allTiles = document.querySelectorAll('.tile');
         // 標準の“ドロップ禁止”を打ち消す
         event.preventDefault(); 
         // ドラッグ操作通過中のインデックスを記録
@@ -222,21 +240,16 @@ function tileDrag(tiles) {
         // もしタイルの上でなければ発火を無視
         if (dragOverIndex === null) return;
         // 全タイルのボーダーをリセット
-        for (const tile of allTiles) {
-            tile.style.border = "";
-        }
+        resetBorder();
         // 今通過中のタイルにボーダーをつける
         const dragOverTile = document.querySelector('[data-index="' + dragOverIndex + '"]');
-        dragOverTile.style.border = "1px green solid";
+        dragOverTile.style.border = "1px #37b4fe solid";
     })
     //イベントキャッチ：ドラッグドロップ（'dragDropIndex'を、落としたタイルのインデックスに更新）
     sectionTiles.addEventListener('drop', (event) => {
-        const allTiles = document.querySelectorAll('.tile');
         dragDropIndex = indexFromEvent(event);
         // 全タイルのボーダーをリセット
-        for (const tile of allTiles) {
-            tile.style.border = "";
-        }
+        resetBorder();
         // もしタイルの上でなければ発火を無視
         if (dragDropIndex === null) return;
         // もしスタートとドロップが同じ場所なら何もしない
@@ -252,10 +265,23 @@ function tileDrag(tiles) {
 }
 // =============== < パネルの出しれ処理 > ===============
 
+// タイル作成パネルを出す関数
+function createPanelOpen() {
+    // 開いているパネルを全て閉じから処理に入る
+    closePanel();
+    // クリックしたらパネルが閉じる層を出す
+    panelOutOpen();
+    // ".create-panel"を表示させる
+    createPanel.classList.remove('close');
+    createPanel.classList.add('show');
+}
+
 // 記録パネルを出す関数(もしすでに値が入っているなら入力された状態で出す) 
 function recordPanelOpen(tiles) {
     // 開いているパネルを全て閉じから処理に入る
     closePanel();
+    // 全タイルのボーダーをリセット
+    resetBorder();
     // クリックしたらパネルが閉じる層を出す
     panelOutOpen();
     // 入力欄にtilesの値を入れる
@@ -275,6 +301,21 @@ function recordPanelOpen(tiles) {
     recordPanel.classList.remove('close');
     recordPanel.classList.add('show'); 
 }
+
+// text-edit-panelを出す関数
+function textTilePanelOpen() {
+    // 開いているパネルを全て閉じから処理に入る
+    closePanel();
+    // 全タイルのボーダーをリセット
+    resetBorder();
+    // クリックしたらパネルが閉じる層を出す
+    panelOutOpen();
+
+    textTilePanel.classList.remove("close");
+    textTilePanel.classList.add("show");
+}
+
+
 // 開いている.panelを全て閉じる関数
 function closePanel() {
     const panels = document.querySelectorAll(".panel");
@@ -301,12 +342,22 @@ function closeButton() {
         });
     }
 }
+// イベントキャッチ：text-editボタンが押されたら
+function textEditButton() {
+    const textEditButton = document.querySelector('.text-edit-button')
+    textEditButton.addEventListener('click', () => {   
+        textTilePanelOpen();
+    })
+}
 // イベントキャッチ：EDITボタンが押されたら
 function editButton() {
-    const editButton = document.querySelector('.edit-button');
-    editButton.addEventListener('click', () => {
-        recordPanelOpen(tiles);
-    })
+    const editButtons = document.querySelectorAll('.edit-button');
+    for (const button of editButtons) {
+        button.addEventListener('click', () => {
+            recordPanelOpen(tiles);
+        })
+    }
+
 }
 // イベントキャッチ：DELETEボタンが押されたら
 function deleteButton(tiles)  {
@@ -334,6 +385,7 @@ function formSend(tiles) {
         // 'http://'で始まらないURLが入力されていたら送信を取り消す
         if (urlInput.value.startsWith('http://') || urlInput.value.startsWith('https://')) {
             // tileArrayのactionIndex番目に値を入れる
+            tiles[activeIndex].type = "linkTile"
             tiles[activeIndex].link.url = urlInput.value;
             tiles[activeIndex].link.name = nameInput.value;
             tiles[activeIndex].link.memo = memoInput.value;
@@ -355,6 +407,9 @@ function formSend(tiles) {
 function clickPanelOut() {
     const panelOut = document.querySelector('.panel-background');
     panelOut.addEventListener('click', () => {
+        // 全タイルのボーダーをリセット
+        resetBorder();
+        // 全パネルを非表示に
         closePanel();
     })
 }
@@ -396,6 +451,13 @@ const rightClickPanel = document.querySelector('.section-rightclick-panel');
 const rightclickPanelName = document.querySelector('.rightclick-panel-name'); 
 const rightclickPanelUrl = document.querySelector('.rightclick-panel-url'); 
 const rightclickPanelMemo = document.querySelector('.rightclick-panel-memo'); 
+
+
+
+
+const createPanel = document.querySelector('.section-create-panel');
+
+const textTilePanel = document.querySelector('.section-text-tile-panel');
 
 // [main] > 
 const recordPanel = document.querySelector('.section-record-panel');
@@ -444,3 +506,5 @@ formSend(tiles);
 clickPanelOut();
 // イベントキャッチ：URL入力欄に変化があったら
 faviconUpdate();
+// イベントキャッチ：text-editボタンが押されたら
+textEditButton();

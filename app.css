@@ -79,6 +79,34 @@ main .section-tiles {
     display: block;
 }
 
+/* =============== < パネル：create-panel > =============== */
+.section-create-panel {
+    top: 0; /* JS側で制御 */
+    left: 0; /* JS側で制御 */
+    z-index: 2;
+    background-color: #494646;
+    border: 2px darkgrey solid;
+    height: 100px;
+    width: 200px;
+    border-radius: 15px;  
+
+
+    display: flex;
+    flex-flow: column;
+    justify-content: space-evenly;
+    align-items: flex-start;
+    .edit-button {
+        padding-left: 10px;
+        color: #fff;
+        font-size: 18px;
+    }
+    .text-edit-button{
+        padding-left: 10px;
+        color: #fff;
+        font-size: 18px;
+    }
+}
+
 /* =============== < パネル：recode-panel > =============== */
 .section-record-panel {
     color: #fff;
