@@ -1,6 +1,6 @@
 'use strict';
 
-// =============== < タイル描画の処理 > ===============
+// =============== < タイル描画の処理 > ==========================================================================================
 
 // タイル配列をローカルストレージから読み込む。なければ新たに配列を作成
 function tilesLoad() {
@@ -14,8 +14,7 @@ function tilesLoad() {
         for (let i=0; i<squares; i++) {
             tiles.push({ 
                 type: "none",
-                index: i,
-                cells: [[],[]],
+                cells: [[],[]],     // 行ごとに要素群を分ける二次元配列を想定
                 width: 0,
                 height: 0,
                 link: {
@@ -34,19 +33,18 @@ function tilesLoad() {
 function makeTile(tiles) {
     // 要素を初期化
     sectionTiles.innerHTML = "";
-    const occupied = new Set(); 
-
+    occupied.clear();
     // タイル生成をデータ数だけループ
     for (let i = 0; i < tiles.length; i++) {
-        // もしoccupiedの中にiがあればこの回をスキップ
+        // もしoccupiedの中にiがあればこの回をスキップ(複数マスタイルに使用されているサブindexをとばしたindexが振られていく)
         if (occupied.has(i)) continue;
+
         // typeがlinkTileならlinkタイルを作る
-        if (tiles[i].type === "linkTile" ||tiles[i].type === "none") { 
+        if (tiles[i].type === "linkTile") { 
 
             // <div class="tile link-tile">
             //    <div class="tile-image">
-            //      <img src="ファビコンURL">
-            //      <i class="fa-regular fa-square-plus"></i>
+            //      <img class="tile-url-image" src="ファビコンURL">
             //    </div>    
             // </div>
 
@@ -54,29 +52,19 @@ function makeTile(tiles) {
             const tileTag = document.createElement('div');
             tileTag.classList.add('tile');
             tileTag.classList.add('link-tile')
-            tileTag.dataset.index = i; 
+            tileTag.dataset.index = i;         // タイルをクリックしたときに識別に使用される重要なindex
             tileTag.draggable = true;
-            // アイコンの見た目用タグを作成
+            // アイコンの見た目用<div>タグを作成
             const tileImage = document.createElement('div');
-            tileImage.className = 'tile-image';
-            // もしurlが入っていれば画像を取得してタイルに貼る
-            if (tiles[i].link.url !== "") {
-                // urlをドメインに加工
-                const urlImage = document.createElement('img');
-                urlImage.className = 'tile-url-image'
-                urlImage.src = convertToFavicon(tiles[i].link.url);
-                // <div class="tile-image"></div>の中に入れ込む  
-                tileImage.append(urlImage);
-            } //urlがないならアイコンに隠し+マークを仕込む
-            else { 
-                const plus = document.createElement('i');
-                plus.className = "fa-regular fa-square-plus";
-                // <div class="tile-image"></div>の中に入れ込む
-                tileImage.append(plus);
-            }
+            tileImage.classList.add('tile-image');
+            // <img>を作成し、srcにファビコンのURL
+            const urlImage = document.createElement('img');
+            urlImage.classList.add('tile-url-image');
+            urlImage.src = convertToFavicon(tiles[i].link.url); 
             // タグを統合 
+            tileImage.append(urlImage);
             tileTag.append(tileImage);
-            sectionTiles.append(tileTag);
+            sectionTiles.append(tileTag);  
 
             // もしtileOnNameがtrueなら名前をタイル上に表示
             if (tiles[i].link.tileOnName) {
@@ -86,11 +74,39 @@ function makeTile(tiles) {
                 tileOnName.textContent = truncate(tiles[i].link.name, 17);
                 tileTag.append(tileOnName);
             }
-            occupied.add(i);
-        } 
+            // 占有済みセットに追加
+            addOccupied(tiles[i].cells);
+        }
+
+        // もしtypeがnoneなら空タイルを作る
+        else if (tiles[i].type === "none") {
+            // <div class="tile link-tile">
+            //    <div class="tile-image">
+            //        <i class="fa-regular fa-square-plus"></i>
+            //    </div>    
+            // </div>
+
+            // リンクタイルの外側を流用
+            const tileTag = document.createElement('div');
+            tileTag.classList.add('tile');
+            tileTag.classList.add('link-tile')
+            // タイルをクリックしたときに識別に使用される重要なindex。
+            // 複数マスタイルであれば左上の基準マスのindexがこれになる
+            tileTag.dataset.index = i;         
+            tileTag.draggable = true;
+            const tileImage = document.createElement('div');
+            tileImage.classList.add('tile-image');
+            // ファビコン画像の代わりに＋マークを入れたタイルを生成
+            const plus = document.createElement('i');
+            plus.classList.add('fa-regular', 'fa-square-plus');
+            // タグを統合 
+            tileImage.append(plus);
+            tileTag.append(tileImage);
+            sectionTiles.append(tileTag);
+        }
+
         // typeがtextTileならtextタイルを作る
         else if (tiles[i].type === "textTile") {
-
             // <div class="tile text-tile">
             //    <div class="text-area-header">
             //        <p>Memo</P>
@@ -113,22 +129,21 @@ function makeTile(tiles) {
             tileTag.classList.add('text-tile');
             tileTag.dataset.index = i; 
             tileTag.draggable = true;
+
             // ヘッダー部分
             const textAreaHeaderDiv = document.createElement('div');
             textAreaHeaderDiv.classList.add('text-area-header');
             const pTag = document.createElement('p');
             pTag.textContent = "Memo";
-
             const textAreaHeaderButtonDiv = document.createElement('div');
             textAreaHeaderButtonDiv.classList.add('text-area-header-button');
-
             const leftButton = document.createElement('button');
             leftButton.classList.add('left-button');
             leftButton.textContent = "←";
             const rightButton = document.createElement('button');
             rightButton.classList.add('right-button');
             rightButton.textContent = "→";
-
+            // タグを結合
             textAreaHeaderButtonDiv.append(leftButton, rightButton);
             textAreaHeaderDiv.append(pTag, textAreaHeaderButtonDiv);
 
@@ -136,7 +151,7 @@ function makeTile(tiles) {
             const textAreaMainDiv = document.createElement('div'); 
             textAreaMainDiv.classList.add('text-area-main');
             const textAreaTag = document.createElement('textarea');
-
+            // タグを結合
             textAreaMainDiv.append(textAreaTag);
 
             // フッター部分
@@ -148,10 +163,8 @@ function makeTile(tiles) {
             const downButton = document.createElement('button');
             downButton.classList.add('down-button');
             downButton.textContent = "↓";
-
+            // タグを結合
             textAreaFooterDiv.append(upButton, downButton)
-
-            
             tileTag.append(textAreaHeaderDiv, textAreaMainDiv, textAreaFooterDiv);
             sectionTiles.append(tileTag);
 
@@ -162,18 +175,14 @@ function makeTile(tiles) {
             if (tiles[i].height > 1) {
                 tileTag.style.gridRow = 'span ' + tiles[i].height;
             }
-            // 使用しているindexをoccupiedへ追加
-            for (const row of tiles[i].cells) { 
-                for (const cell of row) {            
-                    occupied.add(cell);
-                }
-            } 
+            // cellsを更新して占有済みタイル集合に登録
+            addOccupied(tiles[i].cells);
         }
     }
-    console.log(sectionTiles);
+    console.log(sectionTiles);                                               //test 
 }
 
-// =============== < 部品的な処理 > ===============
+// =============== < 部品的な処理 > ==========================================================================================
 
 // eventを受け取ってindexを返す関数
 function indexFromEvent(event) {
@@ -204,17 +213,51 @@ function resetBorder() {
         tile.style.border = "";
     }
 }
+// 引数に受け取ったcellsの中身をグローバル集合のoccupiedに入れ込む関数
+function addOccupied(twoDimensionalArray) {
+    for (const row of twoDimensionalArray) {
+        for (const cell of row) {
+            occupied.add(cell);
+        }
+    }
+}
+// 引数に受け取ったリストの要素とグローバル集合のoccupiedに被りが存在していなかったらtrue、被りがあったらfalseを返す関数
+function CheckDuplicates(list) {
+    for (const one of list) {
+        if (occupied.has(one)) {
+            return false;
+        }
+    }
+    return true;
+}
+// indexをうけとり、tiles[Index]のwidthとhightを参照して新しいcellsをリターンする関数
+function newCells(index) {
+    const cells = [];
+    const width = tiles[index].width;
+    const height = tiles[index].height;
+    for (let r=0; r<height; r++) {
+        const clm = [];
+        for (let c=0; c<width; c++) {
+            clm.push(index + (c) + (r*20));
+        }
+        cells.push(clm);
+    }
+    return cells;
+}
 
-// =============== < タイルをクリックしたときの処理 > ===============
+// =============== < タイルをクリックしたときの処理 > ===========================================================================
 
 // タイルを左クリック時の分岐
 function tileLeftClick(tiles) {
     // タイルセクションにイベントをセット
     sectionTiles.addEventListener('click', (event) => {
+        console.log(event.target);
+
         // activeIndexを更新
         activeIndex = indexFromEvent(event); 
         // タイルの上でなかったら無視
         if (activeIndex === null) {return};
+        console.log(activeIndex);                                              // test
         // typeが"linkTile"ならリンクを開く。
         if (tiles[activeIndex].type === "linkTile") {
             if (tiles[activeIndex].link.anotherWindow === true) {
@@ -223,15 +266,40 @@ function tileLeftClick(tiles) {
                 window.open(tiles[activeIndex].link.url, '_blank');
             }
         } 
+        // typeが"textTile"でサイズ変更ボタンを押されていたらサイズ変更処理"
+        else if (tiles[activeIndex].type === "textTile") {
+            const button = event.target.closest('button');
+            // ボタン部分以外が押されていたら何もしない
+            if (!button) return; 
+            // もし'right-button'が押されていたら
+            if (button.classList.contains('right-button')) {
+                tiles[activeIndex].width += 1;
+            }
+            if (button.classList.contains('left-button')) {
+                tiles[activeIndex].width -= 1;
+            }
+            if (button.classList.contains('down-button')) {
+                tiles[activeIndex].height += 1;
+            }
+            if (button.classList.contains('up-button')) {
+                tiles[activeIndex].height -= 1;
+            }
+            // cellsを再計算する
+            tiles[activeIndex].cells = newCells(activeIndex);  
+            // ローカルストレージに保存
+            localStorageSave(tiles);
+            // 新しくタイルを再構築
+            makeTile(tiles);
+        }
         // typeが"none"ならタイルクリエイトメニューを開く
         else if (tiles[activeIndex].type === "none") {
             // クリックしたタイルの枠を光らせる
             const activeTile = document.querySelector('[data-index="' + activeIndex + '"]');
             activeTile.style.border = "1px #37b4fe solid";
-
             // スタイルにクリックした座標を渡す
             createPanel.style.left = event.clientX + "px";
             createPanel.style.top = event.clientY + "px";
+            // タイルクリエイトメニューを出す
             createPanelOpen();
         }
     });
@@ -265,7 +333,7 @@ function tileRightClick(tiles) {
         }
     });
 }
-// =============== < タイルのドラッグ操作 > ===============
+// =============== < タイルのドラッグ操作 > ===========================================================================
 function tileDrag(tiles) {
     // イベントキャッチ：ドラッグスタート（'dragStartIndex'を、掴んだタイルのインデックスに更新）
     sectionTiles.addEventListener('dragstart', (event) => {
@@ -296,14 +364,16 @@ function tileDrag(tiles) {
         if (dragStartIndex === dragDropIndex) return;
         // タイルデータをスワップする
         [tiles[dragStartIndex], tiles[dragDropIndex]] = [tiles[dragDropIndex], tiles[dragStartIndex]];
+        // 各cellsを再計算する
+        tiles[dragStartIndex].cells = newCells(dragStartIndex);
+        tiles[dragDropIndex].cells  = newCells(dragDropIndex);
         // localStorageに保存する
         localStorageSave(tiles);
-
         // 新しくタイルを再構築
         makeTile(tiles);
     })
 }
-// =============== < パネルの出しれ処理 > ===============
+// =============== < パネルの出しれ処理 > ===========================================================================
 
 // タイル作成パネルを出す関数
 function createPanelOpen() {
@@ -356,7 +426,7 @@ function panelOutOpen() {
     panelOut.classList.add("show")
 }
 
-// =============== < ボタン関係の処理 > ===============
+// =============== < ボタン関係の処理 > ===========================================================================
 
 // イベントキャッチ：✕ボタンが押されたら
 function closeButton() {
@@ -373,7 +443,6 @@ function textEditButton() {
     textEditButton.addEventListener('click', () => {   
 
         tiles[activeIndex].type = "textTile";
-        tiles[activeIndex].index = activeIndex;
         tiles[activeIndex].cells[0][0] = activeIndex;
         tiles[activeIndex].width = 1;
         tiles[activeIndex].height = 1;
@@ -400,6 +469,10 @@ function deleteButton(tiles)  {
     const deleteButton = document.querySelector('.delete-button');
     deleteButton.addEventListener('click', () => {
         // 値をtilesオブジェクトのi番目に空の値を入れる
+        tiles[activeIndex].type = "none";
+        tiles[activeIndex].cells = [[],[]];
+        tiles[activeIndex].width = 0;
+        tiles[activeIndex].height = 0;
         tiles[activeIndex].link.url = "";
         tiles[activeIndex].link.name = "";
         tiles[activeIndex].link.memo = "";
@@ -421,6 +494,10 @@ function formSend(tiles) {
         // 'http://'で始まらないURLが入力されていたら送信を取り消す
         if (urlInput.value.startsWith('http://') || urlInput.value.startsWith('https://')) {
             // tileArrayのactionIndex番目に値を入れる
+            tiles[activeIndex].type = "linkTile";
+            tiles[activeIndex].width = 1;
+            tiles[activeIndex].height = 1;
+            tiles[activeIndex].cells = newCells(activeIndex);
             tiles[activeIndex].type = "linkTile"
             tiles[activeIndex].link.url = urlInput.value;
             tiles[activeIndex].link.name = nameInput.value;
@@ -469,7 +546,8 @@ function faviconUpdate() {
 
 
 
-// =============== < 処理 > ===============
+
+// =============== < 処理 > ==========================================================================================
 
 
 //""""""""""""""" < 起動処理 > """""""""""""""
@@ -508,6 +586,8 @@ const anotherWindow = document.querySelector('#another-window');
 
 //""""""""""""""" < 初期値を設定 > """""""""""""""
 
+// 使用中のインデックスを記録
+const occupied = new Set(); 
 // タイルデータがあれば持ってきてなければtileオブジェクトを生成
 let tiles = tilesLoad();
 // タイルの見た目を生成(data-index付き)
@@ -518,6 +598,7 @@ let activeIndex = null;
 let dragStartIndex = null;
 let dragOverIndex = null;
 let dragDropIndex = null;
+
 
 
 //""""""""""""""" < メイン処理 > """""""""""""""
