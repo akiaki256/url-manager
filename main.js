@@ -94,8 +94,18 @@ function makeTile(tiles) {
             // <div class="tile text-tile">
             //    <div class="text-area-header">
             //        <p>Memo</P>
+            //        <div class="text-area-header-button">
+            //            <button>←</button>
+            //            <button>→</button>  
+            //        </div>
             //    <div/>
-            //    <textarea></textarea>     
+            //    <div class="text-area-main">
+            //        <textarea></textarea>
+            //    </div> 
+            //    <div class="text-area-footer">
+            //        <button>↑</button>
+            //        <button>↓</button>   
+            //    </div> 
             // <div/>
 
             const tileTag = document.createElement('div');
@@ -103,17 +113,46 @@ function makeTile(tiles) {
             tileTag.classList.add('text-tile');
             tileTag.dataset.index = i; 
             tileTag.draggable = true;
-
+            // ヘッダー部分
             const textAreaHeaderDiv = document.createElement('div');
             textAreaHeaderDiv.classList.add('text-area-header');
-
             const pTag = document.createElement('p');
             pTag.textContent = "Memo";
 
+            const textAreaHeaderButtonDiv = document.createElement('div');
+            textAreaHeaderButtonDiv.classList.add('text-area-header-button');
+
+            const leftButton = document.createElement('button');
+            leftButton.classList.add('left-button');
+            leftButton.textContent = "←";
+            const rightButton = document.createElement('button');
+            rightButton.classList.add('right-button');
+            rightButton.textContent = "→";
+
+            textAreaHeaderButtonDiv.append(leftButton, rightButton);
+            textAreaHeaderDiv.append(pTag, textAreaHeaderButtonDiv);
+
+            // メイン部分
+            const textAreaMainDiv = document.createElement('div'); 
+            textAreaMainDiv.classList.add('text-area-main');
             const textAreaTag = document.createElement('textarea');
 
-            tileTag.append(textAreaHeaderDiv, textAreaTag);
-            textAreaHeaderDiv.append(pTag);
+            textAreaMainDiv.append(textAreaTag);
+
+            // フッター部分
+            const textAreaFooterDiv = document.createElement('div');
+            textAreaFooterDiv.classList.add('text-area-footer');
+            const upButton = document.createElement('button');
+            upButton.classList.add('up-button');
+            upButton.textContent = "↑";
+            const downButton = document.createElement('button');
+            downButton.classList.add('down-button');
+            downButton.textContent = "↓";
+
+            textAreaFooterDiv.append(upButton, downButton)
+
+            
+            tileTag.append(textAreaHeaderDiv, textAreaMainDiv, textAreaFooterDiv);
             sectionTiles.append(tileTag);
 
             // CSS
@@ -427,8 +466,6 @@ function faviconUpdate() {
         }
     })
 }
-
-
 
 
 
