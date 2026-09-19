@@ -221,7 +221,7 @@ function addOccupied(twoDimensionalArray) {
         }
     }
 }
-// 引数に受け取ったリストの要素とグローバル集合のoccupiedに被りが存在していなかったらtrue、被りがあったらfalseを返す関数
+// 引数に受け取ったリストの中身とグローバル集合のoccupiedに被りが存在していなかったらtrue、被りがあったらfalseを返す関数
 function CheckDuplicates(list) {
     for (const one of list) {
         if (occupied.has(one)) {
@@ -243,6 +243,13 @@ function newCells(index) {
         cells.push(clm);
     }
     return cells;
+}
+// 画面の縁のタイルインデックスをedge集合にいれる（サイズ変更に必要なのは左の縁のみ）
+function addEdgeIndex() {
+    // 左の辺
+    for (let i=0; i<9; i++) {
+        edge.add(0 + (i*20));
+    }
 }
 
 // =============== < タイルをクリックしたときの処理 > ===========================================================================
@@ -272,18 +279,52 @@ function tileLeftClick(tiles) {
             // ボタン部分以外が押されていたら何もしない
             if (!button) return; 
             // もし'right-button'が押されていたら
+            let width = tiles[activeIndex].width;
+            let height = tiles[activeIndex].height; 
             if (button.classList.contains('right-button')) {
-                tiles[activeIndex].width += 1;
+                width += 1;
             }
             if (button.classList.contains('left-button')) {
-                tiles[activeIndex].width -= 1;
+                if (width > 1) {
+                    width -= 1;
+                }
             }
             if (button.classList.contains('down-button')) {
-                tiles[activeIndex].height += 1;
+                height += 1;
             }
             if (button.classList.contains('up-button')) {
-                tiles[activeIndex].height -= 1;
+                if (height > 1) {
+                    height -= 1;
+                }
             }
+            // サイズ変更後に増えるcellsを作成
+            const cellList = [];
+            if (width > tiles[activeIndex].width) {
+                for (let h=0; h<height; h++){
+                    cellList.push(activeIndex + (width-1) + (h*20));
+                }
+            }
+            if (height > tiles[activeIndex].height){
+                for (let w=0; w<width; w++) {
+                    cellList.push(activeIndex + ((height-1)*20) + w)
+                }
+            }
+            // 折り返し
+            for (const cell of cellList) {
+                if (edge.has(cell) || cell > 179) {
+                    console.log(edge);
+                    console.log('折り返しを検出');                                  //test
+                    return;
+                }
+            }
+            // 予定cellsがoccupiedに含まれていたらアラートを出して中断
+            if (CheckDuplicates(cellList) !== true) {
+                window.alert('そのタイルは使用中です')
+                return;
+            }
+            // 予定cellsをチェックして問題なければ実際のアクティブタイルに反映
+            tiles[activeIndex].width = width;
+            tiles[activeIndex].height = height;
             // cellsを再計算する
             tiles[activeIndex].cells = newCells(activeIndex);  
             // ローカルストレージに保存
@@ -588,6 +629,10 @@ const anotherWindow = document.querySelector('#another-window');
 
 // 使用中のインデックスを記録
 const occupied = new Set(); 
+// 画面端のインデックスの集合を用意
+const edge = new Set();
+addEdgeIndex();
+console.log(edge);                                                 //test
 // タイルデータがあれば持ってきてなければtileオブジェクトを生成
 let tiles = tilesLoad();
 // タイルの見た目を生成(data-index付き)
