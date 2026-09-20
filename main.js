@@ -23,6 +23,9 @@ function tilesLoad() {
                     memo: "", 
                     tileOnName: false, 
                     anotherWindow: false
+                },
+                text: {
+                    memo: ""
                 }
             });
         }
@@ -174,6 +177,10 @@ function makeTile(tiles) {
             const textAreaMainDiv = document.createElement('div'); 
             textAreaMainDiv.classList.add('text-area-main');
             const textAreaTag = document.createElement('textarea');
+            textAreaTag.classList.add('memo-area');
+            // テキストエリアのvalueをデータから入れ込む
+            textAreaTag.value = tiles[i].text.memo;
+
             // タグを結合
             textAreaMainDiv.append(textAreaTag);
 
@@ -485,6 +492,9 @@ function tileDrag(tiles) {
                     memo: "", 
                     tileOnName: false, 
                     anotherWindow: false
+                },
+                text: {
+                    memo: ""
                 }
         }
         // 移動先のcellsを再計算する
@@ -665,7 +675,19 @@ function faviconUpdate() {
 }
 
 
-
+// イベントキャッチ：テキストタイルにメモが入力されていたらローカルファイルに保存する
+function textTileUpdate() {
+    sectionTiles.addEventListener('input', (event) => {
+        // 変更されたのが memo-area(textarea)か確認
+        if (!event.target.classList.contains('memo-area')) return;
+        // どのタイルか特定
+        const index = indexFromEvent(event);
+        if (index === null) return;
+        // そのタイルの memo を更新
+        tiles[index].text.memo = event.target.value;
+        localStorageSave(tiles);
+    });
+}
 
 // =============== < 処理 > ==========================================================================================
 
@@ -702,6 +724,7 @@ const nameInput = document.querySelector('#name');
 const memoInput = document.querySelector('#memo');
 const tileOnName = document.querySelector('#title-on-name');
 const anotherWindow = document.querySelector('#another-window');
+
 
 
 //""""""""""""""" < 初期値を設定 > """""""""""""""
@@ -748,3 +771,5 @@ clickPanelOut();
 faviconUpdate();
 // イベントキャッチ：text-editボタンが押されたら
 textEditButton();
+// イベントキャッチ：テキストタイルにメモが入力されていたらローカルファイルに保存する
+textTileUpdate();
