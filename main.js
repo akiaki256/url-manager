@@ -219,10 +219,15 @@ function addOccupied(list) {
         occupied.add(cell);
     }
 }
-// 引数に受け取ったリストの中身とグローバル集合のoccupiedに被りが存在していなかったらtrue、被りがあったらfalseを返す関数
-function CheckDuplicates(list) {
+// 第一引数に受け取ったリストの中身とグローバル集合のoccupiedに被りが存在していなかったらtrue、被りがあったらfalseを返す関数
+// 第二引数で判定から除外するセルを設定できる
+function CheckDuplicates(list, excludeCells) {
+    const checkSet = new Set(occupied);
+    for (const cell of excludeCells) {
+        checkSet.delete(cell);
+    }
     for (const one of list) {
-        if (occupied.has(one)) {
+        if (checkSet.has(one)) {
             return false;
         }
     }
@@ -240,12 +245,21 @@ function newCells(index) {
     }
     return cells;
 }
-// 画面の縁のタイルインデックスをedge集合にいれる（サイズ変更に必要なのは左の縁のみ）
+// 画面の縁のタイルインデックスをedge集合にいれる
 function addEdgeIndex() {
+    // 右の辺
+    for (let i=0; i<9; i++) {
+        rightEdge.add(19 + (i*20));
+    }
     // 左の辺
     for (let i=0; i<9; i++) {
-        edge.add(0 + (i*20));
+        leftEdge.add(0 + (i*20));
     }
+    // 下の辺
+    for (let i=0; i<20; i++) {
+        bottomEdge.add(160 + i)
+    }
+
 }
 
 // =============== < タイルをクリックしたときの処理 > ===========================================================================
@@ -294,27 +308,34 @@ function tileLeftClick(tiles) {
                 }
             }
             // サイズ変更後に増えるcellsを作成
-            const cellList = [];
+            let cellList = [];
+            // 右へ拡大する場合の折り返し検証
             if (width > tiles[activeIndex].width) {
+                for (const cell of tiles[activeIndex].cells) {
+                    if (rightEdge.has(cell)) {
+                        window.alert('操作範囲外です');                                  //test
+                        return;
+                    }
+                }
+                // 予定地を作成
                 for (let h=0; h<height; h++){
                     cellList.push(activeIndex + (width-1) + (h*20));
                 }
             }
+            //下へ拡大する場合の折り返し検証
             if (height > tiles[activeIndex].height){
+                for (const cell of tiles[activeIndex].cells) {
+                    if (bottomEdge.has(cell)) {
+                        window.alert('操作範囲外です');                                  //test
+                        return;
+                    }
+                }
                 for (let w=0; w<width; w++) {
                     cellList.push(activeIndex + ((height-1)*20) + w)
                 }
             }
-            // 折り返し検知
-            for (const cell of cellList) {
-                if (edge.has(cell) || cell > 179) {
-                    console.log(edge);
-                    console.log('折り返しを検出');                                  //test
-                    return;
-                }
-            }
             // 予定cellsがoccupiedに含まれていたらアラートを出して中断
-            if (CheckDuplicates(cellList) !== true) {
+            if (CheckDuplicates(cellList, []) !== true) {
                 window.alert('そのタイルは使用中です')
                 return;
             }
@@ -350,7 +371,7 @@ function tileRightClick(tiles) {
         // タイルの上でなかったら無視
         if (activeIndex === null) {return};
         //urlが登録してあるならメニューを出す
-        if (tiles[activeIndex].link.url !== '') {
+        if (tiles[activeIndex].type === 'linkTile') {
             // 標準メニューをブロック
             event.preventDefault(); 
             // 開いているパネルを全て閉じから処理に入る
@@ -399,10 +420,61 @@ function tileDrag(tiles) {
         if (dragDropIndex === null) return;
         // もしスタートとドロップが同じ場所なら何もしない
         if (dragStartIndex === dragDropIndex) return;
-        // タイルデータをスワップする
-        [tiles[dragStartIndex], tiles[dragDropIndex]] = [tiles[dragDropIndex], tiles[dragStartIndex]];
-        // 各cellsを再計算する
-        tiles[dragStartIndex].cells = newCells(dragStartIndex);
+
+        // ドロップ先の占有インデックスを計算
+        const originSite = [];
+        const originWidth = tiles[dragStartIndex].width;
+        const originHeight = tiles[dragStartIndex].height;
+        for (let r=0; r<originHeight; r++) {
+            for (let c=0; c<originWidth; c++) {
+                originSite.push(dragDropIndex + (c) + (r*20));
+            }
+        }
+        // ドロップ先で折り返しがおきないかをチェック(右端)
+        let right = false;
+        let left = false;
+        for (const one of originSite) {
+            if (rightEdge.has(one)) {
+                right = true;
+            }
+            if (leftEdge.has(one)) {
+                left = true;
+            }
+        }
+        if (right && left) {
+            window.alert('移動先に十分な空きがありません');
+            return;
+        }
+        // ドロップ先で折り返しがおきないかをチェック(下端)
+        for (const one of originSite) {
+            if (one > 179) {
+                window.alert('移動先に十分な空きがありません');
+                return;
+            }
+        }
+        // 検証で除外するリストを作成
+        let excludeCells = tiles[dragStartIndex].cells;
+        // ドロップ先に十分な空きがあるかを確認
+        if (CheckDuplicates(originSite, excludeCells) === false) {
+            window.alert('移動先に十分な空きがありません');
+            return;
+        }
+        // タイルデータを移動する
+        tiles[dragDropIndex] = tiles[dragStartIndex];
+        tiles[dragStartIndex] = {
+            type: "none",
+                cells: [],     //そのタイルが占有するindexをリストで保持
+                width: 0,
+                height: 0,
+                link: {
+                    url: "", 
+                    name: "", 
+                    memo: "", 
+                    tileOnName: false, 
+                    anotherWindow: false
+                }
+        }
+        // 移動先のcellsを再計算する
         tiles[dragDropIndex].cells  = newCells(dragDropIndex);
         // localStorageに保存する
         localStorageSave(tiles);
@@ -499,7 +571,6 @@ function editButton() {
             recordPanelOpen(tiles);
         })
     }
-
 }
 // イベントキャッチ：DELETEボタンが押されたら
 function deleteButton(tiles)  {
@@ -625,9 +696,10 @@ const anotherWindow = document.querySelector('#another-window');
 // 使用中のインデックスを記録
 const occupied = new Set(); 
 // 画面端のインデックスの集合を用意
-const edge = new Set();
+const rightEdge = new Set();
+const leftEdge = new Set();
+const bottomEdge= new Set();
 addEdgeIndex();
-console.log(edge);                                                        //test
 // タイルデータがあれば持ってきてなければtileオブジェクトを生成
 let tiles = tilesLoad();
 // タイルの見た目を生成(data-index付き)
