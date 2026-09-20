@@ -109,18 +109,17 @@ function makeTile(tiles) {
         else if (tiles[i].type === "textTile") {
             // <div class="tile text-tile">
             //    <div class="text-area-header">
-            //        <p>Memo</P>
-            //        <div class="text-area-header-button">
-            //            <button>←</button>
-            //            <button>→</button>  
+            //        <div class="up-down-button">
+            //            <button><i></i></button>
+            //            <button><i></i></button> 
+            //        </div>
+            //        <div class="left-right-button">
+            //            <button><i></i></button>
+            //            <button><i></i></button>  
             //        </div>
             //    <div/>
             //    <div class="text-area-main">
             //        <textarea></textarea>
-            //    </div> 
-            //    <div class="text-area-footer">
-            //        <button>↑</button>
-            //        <button>↓</button>   
             //    </div> 
             // <div/>
 
@@ -133,19 +132,43 @@ function makeTile(tiles) {
             // ヘッダー部分
             const textAreaHeaderDiv = document.createElement('div');
             textAreaHeaderDiv.classList.add('text-area-header');
-            const pTag = document.createElement('p');
-            pTag.textContent = "Memo";
-            const textAreaHeaderButtonDiv = document.createElement('div');
-            textAreaHeaderButtonDiv.classList.add('text-area-header-button');
+
+            const upDownButtonDiv = document.createElement('div');
+            upDownButtonDiv.classList.add('up-down-button');
+
+            const upButton = document.createElement('button');
+            upButton.classList.add('up-button');
+            const up = document.createElement('i');
+            up.classList.add('fa-solid', 'fa-caret-up');
+            upButton.append(up);
+            
+            const downButton = document.createElement('button');
+            downButton.classList.add('down-button');
+            const down = document.createElement('i');
+            down.classList.add('fa-solid', 'fa-caret-down');
+            downButton.append(down);
+
+            upDownButtonDiv.append(upButton,downButton);
+
+            const leftRightButtonDiv = document.createElement('div');
+            leftRightButtonDiv.classList.add('left-right-button');
+
             const leftButton = document.createElement('button');
             leftButton.classList.add('left-button');
-            leftButton.textContent = "←";
+            const left = document.createElement('i');
+            left.classList.add('fa-solid', 'fa-caret-left');
+            leftButton.append(left);
+
             const rightButton = document.createElement('button');
             rightButton.classList.add('right-button');
-            rightButton.textContent = "→";
+            const right = document.createElement('i');
+            right.classList.add('fa-solid', 'fa-caret-right');
+            rightButton.append(right);
+
+            leftRightButtonDiv.append(leftButton, rightButton);
+
             // タグを結合
-            textAreaHeaderButtonDiv.append(leftButton, rightButton);
-            textAreaHeaderDiv.append(pTag, textAreaHeaderButtonDiv);
+            textAreaHeaderDiv.append(upDownButtonDiv, leftRightButtonDiv);
 
             // メイン部分
             const textAreaMainDiv = document.createElement('div'); 
@@ -154,18 +177,8 @@ function makeTile(tiles) {
             // タグを結合
             textAreaMainDiv.append(textAreaTag);
 
-            // フッター部分
-            const textAreaFooterDiv = document.createElement('div');
-            textAreaFooterDiv.classList.add('text-area-footer');
-            const upButton = document.createElement('button');
-            upButton.classList.add('up-button');
-            upButton.textContent = "↑";
-            const downButton = document.createElement('button');
-            downButton.classList.add('down-button');
-            downButton.textContent = "↓";
             // タグを結合
-            textAreaFooterDiv.append(upButton, downButton)
-            tileTag.append(textAreaHeaderDiv, textAreaMainDiv, textAreaFooterDiv);
+            tileTag.append(textAreaHeaderDiv, textAreaMainDiv);
             sectionTiles.append(tileTag);
 
             // CSS

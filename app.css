@@ -80,20 +80,32 @@ main .section-tiles {
 
         .text-area-header {
             display: flex;
-            justify-content: space-between;
-            padding: 0 10px;
+            justify-content: flex-start;
+            gap: 5px;
             font-size: 10px;
             color: #fff;
             background-color: #414141;
             &:hover  {
                 background-color: #686868;
             }
-            .left-button, .right-button {
-                font-size: 10px;
-                color: #fff;
-                font-size: 10px;
-                height: 100%;
-        }
+            .up-down-button {
+                display: flex;
+                .up-button, .down-button {
+                    font-size: 14px;
+                    color: #fff;
+                    height: 100%;
+                }
+            }
+            .left-right-button {
+                display: flex;
+
+                .left-button, .right-button {
+                    font-size: 14px;
+                    color: #fff;
+                    height: 100%;
+                }
+            }
+
         }
         .text-area-main {
             display: flex;
@@ -111,20 +123,6 @@ main .section-tiles {
                 resize: none;
             }
         }
-        .text-area-footer {
-            display: flex;
-            justify-content: space-around;
-            background-color: #414141;
-            &:hover  {
-                background-color: #686868;
-            }
-            .up-button, .down-button {
-                padding: 0;
-                color: #fff;
-                font-size: 10px;
-            }
-        }
-
     }
 }
 
