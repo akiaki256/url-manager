@@ -14,7 +14,7 @@ function tilesLoad() {
         for (let i=0; i<squares; i++) {
             tiles.push({ 
                 type: "none",
-                cells: [[],[]],     // 行ごとに要素群を分ける二次元配列を想定
+                cells: [],     //そのタイルが占有するindexをリストで保持
                 width: 0,
                 height: 0,
                 link: {
@@ -214,11 +214,9 @@ function resetBorder() {
     }
 }
 // 引数に受け取ったcellsの中身をグローバル集合のoccupiedに入れ込む関数
-function addOccupied(twoDimensionalArray) {
-    for (const row of twoDimensionalArray) {
-        for (const cell of row) {
-            occupied.add(cell);
-        }
+function addOccupied(list) {
+    for (const cell of list) {
+        occupied.add(cell);
     }
 }
 // 引数に受け取ったリストの中身とグローバル集合のoccupiedに被りが存在していなかったらtrue、被りがあったらfalseを返す関数
@@ -236,11 +234,9 @@ function newCells(index) {
     const width = tiles[index].width;
     const height = tiles[index].height;
     for (let r=0; r<height; r++) {
-        const clm = [];
         for (let c=0; c<width; c++) {
-            clm.push(index + (c) + (r*20));
+            cells.push(index + (c) + (r*20));
         }
-        cells.push(clm);
     }
     return cells;
 }
@@ -309,7 +305,7 @@ function tileLeftClick(tiles) {
                     cellList.push(activeIndex + ((height-1)*20) + w)
                 }
             }
-            // 折り返し
+            // 折り返し検知
             for (const cell of cellList) {
                 if (edge.has(cell) || cell > 179) {
                     console.log(edge);
@@ -484,7 +480,7 @@ function textEditButton() {
     textEditButton.addEventListener('click', () => {   
 
         tiles[activeIndex].type = "textTile";
-        tiles[activeIndex].cells[0][0] = activeIndex;
+        tiles[activeIndex].cells = newCells(activeIndex);
         tiles[activeIndex].width = 1;
         tiles[activeIndex].height = 1;
         // localStorageに保存する
@@ -511,7 +507,7 @@ function deleteButton(tiles)  {
     deleteButton.addEventListener('click', () => {
         // 値をtilesオブジェクトのi番目に空の値を入れる
         tiles[activeIndex].type = "none";
-        tiles[activeIndex].cells = [[],[]];
+        tiles[activeIndex].cells = [];
         tiles[activeIndex].width = 0;
         tiles[activeIndex].height = 0;
         tiles[activeIndex].link.url = "";
@@ -539,7 +535,6 @@ function formSend(tiles) {
             tiles[activeIndex].width = 1;
             tiles[activeIndex].height = 1;
             tiles[activeIndex].cells = newCells(activeIndex);
-            tiles[activeIndex].type = "linkTile"
             tiles[activeIndex].link.url = urlInput.value;
             tiles[activeIndex].link.name = nameInput.value;
             tiles[activeIndex].link.memo = memoInput.value;
@@ -632,7 +627,7 @@ const occupied = new Set();
 // 画面端のインデックスの集合を用意
 const edge = new Set();
 addEdgeIndex();
-console.log(edge);                                                 //test
+console.log(edge);                                                        //test
 // タイルデータがあれば持ってきてなければtileオブジェクトを生成
 let tiles = tilesLoad();
 // タイルの見た目を生成(data-index付き)
