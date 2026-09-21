@@ -91,7 +91,7 @@ main .section-tiles {
             .up-down-button {
                 display: flex;
                 .up-button, .down-button {
-                    font-size: 14px;
+                    font-size: 12px;
                     color: #fff;
                     height: 100%;
                 }
@@ -100,7 +100,7 @@ main .section-tiles {
                 display: flex;
 
                 .left-button, .right-button {
-                    font-size: 14px;
+                    font-size: 12px;
                     color: #fff;
                     height: 100%;
                 }
@@ -367,6 +367,55 @@ main .section-tiles {
         }
     }
 }
+/* =============== < パネル：textTile-rightclick-panel > =============== */
+.section-textTile-rightclick-panel{
+    top: 0; /* JS側で制御 */
+    left: 0; /* JS側で制御 */
+    z-index: 2;
+    color: #fff;
+    font-size: 18px;
+    background-color: #494646;
+    border: 2px darkgrey solid;
+    height: 80px;
+    width: 180px;
+    border-radius: 15px;  
+
+    display: flex;
+    flex-flow: column;
+    justify-content:space-around;
+    align-items: center;
+
+    div {
+        width: 100%;
+        display: flex;
+        justify-content: end;
+        font-size: 12px;
+        button {
+            padding-right: 5px;
+            i {
+                color: #fff;
+            }
+        }
+    }
+
+    p {
+        font-size: 14px;
+    }
+
+    .delete-button {
+        font-size: 14px;
+        color: #fff;
+        width: 60px;
+        height: 30px;
+        background-color: #ff4040;
+        border: 3px darkgrey solid;
+        border-radius: 10px;
+        &:hover {
+            background-color: #f09e9e;
+        }
+    }
+}
+
 /* =============== < パネルの背後に設置してクリックしたらパネルが消えるレイヤー > =============== */
 .panel-background {
     position: absolute;

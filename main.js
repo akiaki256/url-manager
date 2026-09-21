@@ -130,11 +130,12 @@ function makeTile(tiles) {
             tileTag.classList.add('tile');
             tileTag.classList.add('text-tile');
             tileTag.dataset.index = i; 
-            tileTag.draggable = true;
+            
 
             // ヘッダー部分
             const textAreaHeaderDiv = document.createElement('div');
             textAreaHeaderDiv.classList.add('text-area-header');
+            textAreaHeaderDiv.draggable = true;
 
             const upDownButtonDiv = document.createElement('div');
             upDownButtonDiv.classList.add('up-down-button');
@@ -142,13 +143,13 @@ function makeTile(tiles) {
             const upButton = document.createElement('button');
             upButton.classList.add('up-button');
             const up = document.createElement('i');
-            up.classList.add('fa-solid', 'fa-caret-up');
+            up.classList.add('fa-solid', 'fa-angle-up');
             upButton.append(up);
             
             const downButton = document.createElement('button');
             downButton.classList.add('down-button');
             const down = document.createElement('i');
-            down.classList.add('fa-solid', 'fa-caret-down');
+            down.classList.add('fa-solid', 'fa-angle-down');
             downButton.append(down);
 
             upDownButtonDiv.append(upButton,downButton);
@@ -159,13 +160,13 @@ function makeTile(tiles) {
             const leftButton = document.createElement('button');
             leftButton.classList.add('left-button');
             const left = document.createElement('i');
-            left.classList.add('fa-solid', 'fa-caret-left');
+            left.classList.add('fa-solid', 'fa-angle-left');
             leftButton.append(left);
 
             const rightButton = document.createElement('button');
             rightButton.classList.add('right-button');
             const right = document.createElement('i');
-            right.classList.add('fa-solid', 'fa-caret-right');
+            right.classList.add('fa-solid', 'fa-angle-right');
             rightButton.append(right);
 
             leftRightButtonDiv.append(leftButton, rightButton);
@@ -390,7 +391,7 @@ function tileRightClick(tiles) {
         activeIndex = indexFromEvent(event); 
         // タイルの上でなかったら無視
         if (activeIndex === null) {return};
-        //urlが登録してあるならメニューを出す
+        //リンクタイルならメニューを出す
         if (tiles[activeIndex].type === 'linkTile') {
             // 標準メニューをブロック
             event.preventDefault(); 
@@ -409,6 +410,22 @@ function tileRightClick(tiles) {
             rightClickPanel.classList.remove('close');
             rightClickPanel.classList.add('show');
         }
+        // テキストタイルならタイル削除メニューを出す
+        else if (tiles[activeIndex].type === 'textTile') {
+            // ヘッダー以外（テキストエリア等）で右クリックされたら標準メニューのまま無視
+            if (!event.target.closest('.text-area-header')) return;
+            // 標準メニューをブロック
+            event.preventDefault(); 
+            // 開いているパネルを全て閉じから処理に入る
+            closePanel();
+            // クリックしたらパネルが閉じる層を出す
+            panelOutOpen();
+            textTileRightclickPanel.style.left = event.clientX + "px";
+            textTileRightclickPanel.style.top = event.clientY + "px";
+            // "/right-click-panel"を表示させる
+            textTileRightclickPanel.classList.remove('close');
+            textTileRightclickPanel.classList.add('show');
+        } 
     });
 }
 // =============== < タイルのドラッグ操作 > ===========================================================================
@@ -597,25 +614,34 @@ function editButton() {
 }
 // イベントキャッチ：DELETEボタンが押されたら
 function deleteButton(tiles)  {
-    const deleteButton = document.querySelector('.delete-button');
-    deleteButton.addEventListener('click', () => {
-        // 値をtilesオブジェクトのi番目に空の値を入れる
-        tiles[activeIndex].type = "none";
-        tiles[activeIndex].cells = [];
-        tiles[activeIndex].width = 0;
-        tiles[activeIndex].height = 0;
-        tiles[activeIndex].link.url = "";
-        tiles[activeIndex].link.name = "";
-        tiles[activeIndex].link.memo = "";
-        tiles[activeIndex].link.tileOnName = false;
-        tiles[activeIndex].link.anotherWindow = false;
-        // localStorageに保存する
-        localStorageSave(tiles);
-        // 新しくタイルを再構築
-        makeTile(tiles);
-        // パネルを閉じる
-        closePanel();
-    })
+    const deleteButtons = document.querySelectorAll('.delete-button');
+    for (const deleteButton of deleteButtons) {
+        deleteButton.addEventListener('click', () => {
+            // 値をtilesオブジェクトのi番目に空の値を入れる
+            tiles[activeIndex] = {
+                type: "none",
+                cells: [],     //そのタイルが占有するindexをリストで保持
+                width: 0,
+                height: 0,
+                link: {
+                    url: "", 
+                    name: "", 
+                    memo: "", 
+                    tileOnName: false, 
+                    anotherWindow: false
+                },
+                text: {
+                    memo: ""
+                }
+            }
+            // localStorageに保存する
+            localStorageSave(tiles);
+            // 新しくタイルを再構築
+            makeTile(tiles);
+            // パネルを閉じる
+            closePanel();
+        })
+    }
 }
 // イベントキャッチ：EDITパネル内の保存(送信)ボタンが押されたら
 function formSend(tiles) {
@@ -725,7 +751,7 @@ const memoInput = document.querySelector('#memo');
 const tileOnName = document.querySelector('#title-on-name');
 const anotherWindow = document.querySelector('#another-window');
 
-
+const textTileRightclickPanel = document.querySelector('.section-textTile-rightclick-panel');
 
 //""""""""""""""" < 初期値を設定 > """""""""""""""
 
