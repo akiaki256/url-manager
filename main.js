@@ -1,6 +1,27 @@
 'use strict';
 
-// =============== < タイル描画の処理 > ==========================================================================================
+// =============== < タイルデータの作成 > ==========================================================================================
+
+// 中身が空っぽのデータ（一個）
+function noneOneDate() {
+    const oneData = { 
+        type: "none",
+        cells: [],
+        width: 0,
+        height: 0,
+        link: {
+            url: "", 
+            name: "", 
+            memo: "", 
+            tileOnName: false, 
+            anotherWindow: false
+        },
+        text: {
+            memo: ""
+        }
+    };
+    return oneData;
+} 
 
 // タイル配列をローカルストレージから読み込む。なければ新たに配列を作成
 function tilesLoad() {
@@ -12,26 +33,13 @@ function tilesLoad() {
         tiles = [];
         const squares = 180; 
         for (let i=0; i<squares; i++) {
-            tiles.push({ 
-                type: "none",
-                cells: [],     //そのタイルが占有するindexをリストで保持
-                width: 0,
-                height: 0,
-                link: {
-                    url: "", 
-                    name: "", 
-                    memo: "", 
-                    tileOnName: false, 
-                    anotherWindow: false
-                },
-                text: {
-                    memo: ""
-                }
-            });
+            tiles.push(noneOneDate());
         }
     }
     return tiles
 }
+// =============== < タイル描画の処理 > ==========================================================================================
+
 // タイルの見た目部分をdataにindexをふりつつを生成
 function makeTile(tiles) {
     // 要素を初期化
@@ -200,7 +208,6 @@ function makeTile(tiles) {
             addOccupied(tiles[i].cells);
         }
     }
-    console.log(sectionTiles);                                               //test 
 }
 
 // =============== < 部品的な処理 > ==========================================================================================
@@ -444,9 +451,56 @@ function tileDrag(tiles) {
         if (dragOverIndex === null) return;
         // 全タイルのボーダーをリセット
         resetBorder();
-        // 今通過中のタイルにボーダーをつける
-        const dragOverTile = document.querySelector('[data-index="' + dragOverIndex + '"]');
-        dragOverTile.style.border = "1px #37b4fe solid";
+        // ドラッグ中の候補地cellsを取得
+        const optionCells = [];
+        const width = tiles[dragStartIndex].width;
+        const height = tiles[dragStartIndex].height;
+        for (let r=0; r<height; r++) {
+            for (let c=0; c<width; c++) {
+                optionCells.push(dragOverIndex + (c) + (r*20));
+            }
+        }
+        // ドロップ先で折り返しがおきないかをチェック(右端)
+        let right = false;
+        let left = false;
+        for (const one of optionCells) {
+            if (rightEdge.has(one)) {
+                right = true;
+            }
+            if (leftEdge.has(one)) {
+                left = true;
+            }
+        }
+        // ドロップ先で折り返しがおきないかをチェック(下端)
+        let down = false;
+        for (const one of optionCells) {
+            if (one > 179) {
+                down = true
+            }
+        }
+        // 占有チェック
+        let exclude = false;
+  
+        if (CheckDuplicates(optionCells, tiles[dragStartIndex].cells) === false) exclude = true;
+
+        if ((right && left) || down) {
+            const dragOverTile = document.querySelector('[data-index="' + dragOverIndex + '"]');
+            dragOverTile.style.border = "1px red solid";
+            return;
+        } else if (exclude) {
+            for (const cell of optionCells) {
+                const dragOverTile = document.querySelector('[data-index="' + cell + '"]');
+                if (!dragOverTile) continue;   // そのセルにタイルがなければスキップ
+                dragOverTile.style.border = "1px red solid";
+            } 
+        } else {
+            // 今通過中のタイルにボーダーをつける
+            for (const cell of optionCells) {
+                const dragOverTile = document.querySelector('[data-index="' + cell + '"]');
+                if (!dragOverTile) continue;   // そのセルにタイルがなければスキップ
+                dragOverTile.style.border = "1px #37b4fe solid";
+        }
+        }
     })
     //イベントキャッチ：ドラッグドロップ（'dragDropIndex'を、落としたタイルのインデックスに更新）
     sectionTiles.addEventListener('drop', (event) => {
@@ -498,22 +552,7 @@ function tileDrag(tiles) {
         }
         // タイルデータを移動する
         tiles[dragDropIndex] = tiles[dragStartIndex];
-        tiles[dragStartIndex] = {
-            type: "none",
-                cells: [],     //そのタイルが占有するindexをリストで保持
-                width: 0,
-                height: 0,
-                link: {
-                    url: "", 
-                    name: "", 
-                    memo: "", 
-                    tileOnName: false, 
-                    anotherWindow: false
-                },
-                text: {
-                    memo: ""
-                }
-        }
+        tiles[dragStartIndex] = noneOneDate();
         // 移動先のcellsを再計算する
         tiles[dragDropIndex].cells  = newCells(dragDropIndex);
         // localStorageに保存する
@@ -618,22 +657,7 @@ function deleteButton(tiles)  {
     for (const deleteButton of deleteButtons) {
         deleteButton.addEventListener('click', () => {
             // 値をtilesオブジェクトのi番目に空の値を入れる
-            tiles[activeIndex] = {
-                type: "none",
-                cells: [],     //そのタイルが占有するindexをリストで保持
-                width: 0,
-                height: 0,
-                link: {
-                    url: "", 
-                    name: "", 
-                    memo: "", 
-                    tileOnName: false, 
-                    anotherWindow: false
-                },
-                text: {
-                    memo: ""
-                }
-            }
+            tiles[activeIndex] = noneOneDate();
             // localStorageに保存する
             localStorageSave(tiles);
             // 新しくタイルを再構築
