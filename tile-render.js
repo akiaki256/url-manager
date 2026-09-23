@@ -1,10 +1,16 @@
 'use strict';
 
 import { state } from './state.js';
-import { addOccupied } from './main.js';
 import {convertToFavicon, truncate} from './utils.js';
 
 // =============== < タイル描画の処理 > ==========================================================================================
+
+// 引数に受け取ったcellsの中身をstateのoccupiedに入れ込む関数
+function addOccupied(list) {
+    for (const cell of list) {
+        state.occupied.add(cell);
+    }
+}
 
 // リンクタイルのHTMLを作成。引数(index)で受け取ったindexを埋め込む
 function makeLinkTile(index) {

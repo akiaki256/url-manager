@@ -89,16 +89,6 @@ function makeCells(index, width, height) {
     return cells;
 }
 
-// =============== < setの生成 > ===========================================================================
-
-// 引数に受け取ったcellsの中身をグローバル集合のoccupiedに入れ込む関数
-export function addOccupied(list) {
-    for (const cell of list) {
-        state.occupied.add(cell);
-    }
-}
-
-
 // =============== < タイルをクリックしたときの処理 > ===========================================================================
 
 // タイルを左クリック時の分岐
