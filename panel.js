@@ -2,6 +2,8 @@
 
 import { state } from './state.js';
 import { convertToFavicon } from './utils.js';
+
+// ファイル分割の過程で一時的にmain.jsからインポートしている形
 import { resetBorder } from './main.js';
 
 // =============== < パネルの出しれ処理 > ===========================================================================
