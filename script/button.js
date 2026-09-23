@@ -3,7 +3,7 @@
 import { state } from './state.js';
 import { localStorageSave } from './storage.js';
 import { makeTile } from './tile-render.js';
-import { noneOneData, makeCells, resetBorder } from './utils.js';
+import { noneOneData, makeCells, resetBorder, convertToFavicon } from './utils.js';
 import { recordPanelOpen, closePanel } from './panel.js';
 
 // =============== < ボタン関係の処理 > ===========================================================================

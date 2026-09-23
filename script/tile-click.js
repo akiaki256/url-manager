@@ -1,12 +1,11 @@
 'use strict';
 
 import { state } from './state.js';
-
 import { makeTile } from './tile-render.js';
 import { localStorageSave } from './storage.js';
 import { truncate, getIndex, makeCells, addBorder } from './utils.js';
 import { CheckOccupied, checkEdge } from './utils.js';
-import { createPanelOpen, closePanel, panelOutOpen} from './panel.js';
+import { createPanelOpen, closePanel, panelOutOpen } from './panel.js';
 
 // =============== < タイルをクリックしたときの処理 > ===========================================================================
 
@@ -136,5 +135,20 @@ export function tileRightClick() {
             textTileRightclickPanel.classList.remove('close');
             textTileRightclickPanel.classList.add('show');
         } 
+    });
+}
+
+// イベントキャッチ：テキストタイルにメモが入力されていたらローカルファイルに保存する
+export function textTileUpdate() {
+    const sectionTiles = document.querySelector('.section-tiles');
+    sectionTiles.addEventListener('input', (event) => {
+        // 変更されたのが memo-area(textarea)か確認
+        if (!event.target.classList.contains('memo-area')) return;
+        // どのタイルか特定
+        const index = getIndex(event);
+        if (index === null) return;
+        // そのタイルの memo を更新
+        state.tiles[index].text.memo = event.target.value;
+        localStorageSave();
     });
 }
