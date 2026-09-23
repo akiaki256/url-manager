@@ -1,6 +1,7 @@
 'use strict';
 
-import {convertToFavicon, truncate} from './utils.js'
+import {convertToFavicon, truncate} from './utils.js';
+import { state } from './state.js';
 // =============== < タイルデータの作成 > ==========================================================================================
 
 // 中身が空っぽのデータ（一個）
@@ -690,20 +691,7 @@ const textTileRightclickPanel = document.querySelector('.section-textTile-rightc
 
 //""""""""""""""" < 初期値を設定 > """""""""""""""
 
-// 状態管理用のオブジェクトを作成
-const state = {
-    tiles: [],
-    columns: 0,
-    rows: 0,
-    activeIndex: null,    // アクティブタイルのインデックス
-    occupied: new Set(),  // 使用中のインデックスを記録する集合
-    rightEdge: new Set(), // 右画面端のインデックスの集合
-    leftEdge: new Set(),  // 左画面端のインデックスの集合
-    bottomEdge: new Set(),// 下画面端のインデックスの集合
-};
 //タイルの生成数を制御
-state.columns = 20;
-state.rows = 9;
 sectionTiles.style.gridTemplateColumns = `repeat(${state.columns}, 80px)`;
 // タイルデータがあれば持ってきてなければtileオブジェクトを生成
 state.tiles = tilesLoad();
