@@ -3,7 +3,8 @@
 import { state } from './state.js';
 import { noneOneDate, convertToFavicon, truncate, getIndex, makeCells } from './utils.js';
 import { makeTile } from './tile-render.js';
-import { createPanelOpen, recordPanelOpen, closePanel, panelOutOpen} from './panel.js';
+
+import { tileLeftClick, tileRightClick} from './tile-click.js';
 import { closeButton, textEditButton, editButton,deleteButton, formSend, clickPanelOut } from './button.js';
 
 // =============== < タイルデータの作成 > ==========================================================================================
@@ -39,7 +40,7 @@ export function resetBorder() {
 }
 // 第一引数に受け取ったリストの中身とグローバル集合のoccupiedに被りが存在していなかったらtrue。被りがあったらfalseをリターン
 // 第二引数で判定から除外するセルを設定できる
-function CheckOccupied(list, excludeCells) {
+export function CheckOccupied(list, excludeCells) {
     const checkSet = new Set(state.occupied);
     for (const cell of excludeCells) {
         checkSet.delete(cell);
@@ -52,129 +53,11 @@ function CheckOccupied(list, excludeCells) {
     return true;
 }
 
-// =============== < タイルをクリックしたときの処理 > ===========================================================================
 
-// タイルを左クリック時の分岐
-function tileLeftClick() {
-    const buttonMap = new Map ([
-        ['right-button', [1, 0]],
-        ['left-button', [-1, 0]],
-        ['down-button', [0, 1]],
-        ['up-button', [0, -1]],
-    ]);
-    // タイルセクションにイベントをセット
-    sectionTiles.addEventListener('click', (event) => {
-        // 操作中のタイルのindexを取得
-        state.activeIndex = getIndex(event); 
-        const index = state.activeIndex;
-        // タイルの上でなかったら無視
-        if (index === null) {return};
-        // typeが"linkTile"ならリンクを開く。
-        if (state.tiles[index].type === "linkTile") {
-            if (state.tiles[index].link.anotherWindow === true) {
-                window.open(state.tiles[index].link.url, '_blank', 'width=1080,height=960');
-            } else {
-                window.open(state.tiles[index].link.url, '_blank');
-            }
-        } 
-        // typeが"textTile"でサイズ変更ボタンを押されていたらサイズ変更処理"
-        else if (state.tiles[index].type === "textTile") {
-            const button = event.target.closest('button');
-            // ボタン部分以外が押されていたら何もしない
-            if (!button) return; 
-            // どの方向ボタンが押されたのかを定数化
-            const classname = button.classList[0];
-            // 変動させる方向
-            const value = buttonMap.get(classname);
-            let widthHeight = [state.tiles[index].width + value[0], state.tiles[index].height + value[1]];
-
-            // もしサイズ変更後のwidthかheightのどちらかが1より小さくなるならサイズは変えない
-            if (widthHeight[0] < 1 || widthHeight[1] < 1) return;
-
-            // サイズ変更後のcellsを作成
-            const cells = makeCells(index, widthHeight[0], widthHeight[1]);
-            // 折り返しがおきないかの確認
-            if (checkEdge(cells) !== true) {
-                alert('操作範囲外です');   
-                return;
-            }
-            // 拡大先のタイルが空かをチェック
-            if (CheckOccupied(cells, state.tiles[index].cells) !== true) {
-                alert('そのタイルは使用中です');
-                return;
-            }
-            // 実際のアクティブタイルに反映
-            state.tiles[index].width = widthHeight[0];
-            state.tiles[index].height = widthHeight[1];
-            state.tiles[index].cells = cells;
-            // ローカルストレージに保存
-            localStorageSave();
-            // 新しくタイルを再構築
-            makeTile();
-        }
-        // typeが"none"ならタイルクリエイトメニューを開く
-        else if (state.tiles[index].type === "none") {
-            const createPanel = document.querySelector('.section-create-panel');
-            // クリックしたタイルの枠を光らせる
-            addBorder([index], "#37b4fe");
-            // スタイルにクリックした座標を渡す
-            createPanel.style.left = `${event.clientX}px`;
-            createPanel.style.top = `${event.clientY}px`;
-            // タイルクリエイトメニューを出す
-            createPanelOpen();
-        }
-    });
-}
-// 右クリック時にメニューを出す
-function tileRightClick() {
-    // タイルセクションにイベントをセット
-    sectionTiles.addEventListener("contextmenu", (event) => {
-        // 操作中のタイルのindexを取得
-        state.activeIndex = getIndex(event); 
-        const index = state.activeIndex;
-        // タイルの上でなかったら無視
-        if (index === null) {return};
-        //リンクタイルならメニューを出す
-        if (state.tiles[index].type === 'linkTile') {
-            // 標準メニューをブロック
-            event.preventDefault(); 
-            // 開いているパネルを全て閉じから処理に入る
-            closePanel();
-            // クリックしたらパネルが閉じる層を出す
-            panelOutOpen();
-            // 長過ぎるurlとnameは省略表示に変えつつ挿入
-            rightclickPanelName.textContent = truncate(state.tiles[index].link.name, 11);
-            rightclickPanelUrl.textContent = truncate(state.tiles[index].link.url, 24);
-            rightclickPanelMemo.textContent = state.tiles[index].link.memo;
-            // スタイルにクリックした座標を渡す
-            rightClickPanel.style.left = `${event.clientX}px`;
-            rightClickPanel.style.top = `${event.clientY}px`;
-            // "/right-click-panel"を表示させる
-            rightClickPanel.classList.remove('close');
-            rightClickPanel.classList.add('show');
-        }
-        // テキストタイルならタイル削除メニューを出す
-        else if (state.tiles[index].type === 'textTile') {
-            // ヘッダー以外（テキストエリア等）で右クリックされたら標準メニューのまま無視
-            if (!event.target.closest('.text-area-header')) return;
-            // 標準メニューをブロック
-            event.preventDefault(); 
-            // 開いているパネルを全て閉じから処理に入る
-            closePanel();
-            // クリックしたらパネルが閉じる層を出す
-            panelOutOpen();
-            textTileRightclickPanel.style.left = `${event.clientX}px`;
-            textTileRightclickPanel.style.top = `${event.clientY}px`;
-            // "/right-click-panel"を表示させる
-            textTileRightclickPanel.classList.remove('close');
-            textTileRightclickPanel.classList.add('show');
-        } 
-    });
-}
 // =============== < タイルのドラッグ操作 > ===========================================================================
 
 // 引数(cells)から画面右端・下端で折り返しが発生する並びであるかどうかを判定する。折り返しが起こらないならtrue。起きるならfalseをリターン。
-function checkEdge(cells) {
+export function checkEdge(cells) {
     let right = false, left = false, bottom = false; 
     for (const cell of cells) {
         if (state.rightEdge.has(cell)) right = true;
@@ -186,7 +69,7 @@ function checkEdge(cells) {
 }
 
 // 引数(cells, color) 第一引数で受け取ったcellsに、第二引数で指定した色のボーダーをつける。
-function addBorder(cells, color) {
+export function addBorder(cells, color) {
     for (const cell of cells) {
         const dragOverTile = document.querySelector(`[data-index="${cell}"]`);
         if (!dragOverTile) continue;   // そのセルにタイルがなければスキップ
@@ -299,20 +182,10 @@ function textTileUpdate() {
 
 // [main] >
 const sectionTiles = document.querySelector('.section-tiles');
-
-// [main] >
-const rightClickPanel = document.querySelector('.section-rightclick-panel'); 
-// [main] > [.section-rightclick-panel] > [.rightclick-panel-main] >
-const rightclickPanelName = document.querySelector('.rightclick-panel-name'); 
-const rightclickPanelUrl = document.querySelector('.rightclick-panel-url'); 
-const rightclickPanelMemo = document.querySelector('.rightclick-panel-memo'); 
-
-
 // [main] > [.section-record-panel] > [form] > [.form-main] >
 const faviconImg = document.querySelector('.favicon-img');
 const urlInput = document.querySelector('#url');
 
-const textTileRightclickPanel = document.querySelector('.section-textTile-rightclick-panel');
 
 //""""""""""""""" < 初期値を設定 > """""""""""""""
 
@@ -320,9 +193,9 @@ const textTileRightclickPanel = document.querySelector('.section-textTile-rightc
 sectionTiles.style.gridTemplateColumns = `repeat(${state.columns}, 80px)`;
 // タイルデータがあれば持ってきてなければtileオブジェクトを生成
 state.tiles = tilesLoad();
-
 // タイルの見た目を生成(data-index付き)
 makeTile();
+
 
 //""""""""""""""" < メイン処理 > """""""""""""""
 
