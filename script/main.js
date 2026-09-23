@@ -1,34 +1,14 @@
 'use strict';
 
 import { state } from './state.js';
+import { tilesLoad, localStorageSave } from './storage.js';
 import { noneOneDate, convertToFavicon, truncate, getIndex, makeCells } from './utils.js';
 import { makeTile } from './tile-render.js';
 
 import { tileLeftClick, tileRightClick} from './tile-click.js';
 import { closeButton, textEditButton, editButton,deleteButton, formSend, clickPanelOut } from './button.js';
 
-// =============== < タイルデータの作成 > ==========================================================================================
-
-// タイル配列をローカルストレージから読み込む。なければ新たに配列を作成
-export function tilesLoad() {
-    const saved = localStorage.getItem("tiles");
-    let tiles;
-    if (saved !== null) { 
-        tiles = JSON.parse(saved); 
-    } else {
-        tiles = [];
-        const squares = state.columns * state.rows; 
-        for (let i=0; i<squares; i++) tiles.push(noneOneDate());
-    }
-    return tiles
-}
-
 // =============== < 部品的な処理 > ==========================================================================================
-
-// tilesをlocalStorageに保存する関数
-export function localStorageSave() {
-    localStorage.setItem("tiles", JSON.stringify(state.tiles));
-}
 
 // 全タイルのボーダーをリセット
 export function resetBorder() {
@@ -52,7 +32,6 @@ export function CheckOccupied(list, excludeCells) {
     }
     return true;
 }
-
 
 // =============== < タイルのドラッグ操作 > ===========================================================================
 
