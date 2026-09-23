@@ -97,24 +97,7 @@ export function addOccupied(list) {
         state.occupied.add(cell);
     }
 }
-// 右の画面端の集合
-function makeRightIndexSet() {
-    const rightEdge = new Set();
-    for (let i=0; i<state.rows; i++) rightEdge.add((state.columns-1) + (i*state.columns));
-    return rightEdge;
-}
-// 左の画面端の集合
-function makeLeftIndexSet() {
-    const leftEdge = new Set();
-    for (let i=0; i<state.rows; i++) leftEdge.add(0 + (i*state.columns));
-    return leftEdge;
-}
-// 下の画面端の集合
-function makeBottomIndexSet () {
-    const bottomEdge= new Set();
-    for (let i=0; i<state.columns; i++) bottomEdge.add((state.columns*state.rows-state.columns) + i);
-    return bottomEdge;
-}
+
 
 // =============== < タイルをクリックしたときの処理 > ===========================================================================
 
@@ -466,11 +449,6 @@ const rightclickPanelName = document.querySelector('.rightclick-panel-name');
 const rightclickPanelUrl = document.querySelector('.rightclick-panel-url'); 
 const rightclickPanelMemo = document.querySelector('.rightclick-panel-memo'); 
 
-
-const textTilePanel = document.querySelector('.section-text-tile-panel');
-
-// [main] > 
-
 // [main] > [.section-record-panel] > 
 const form = document.querySelector('form');
 // [main] > [.section-record-panel] > [form] > [.form-main] >
@@ -489,14 +467,9 @@ const textTileRightclickPanel = document.querySelector('.section-textTile-rightc
 sectionTiles.style.gridTemplateColumns = `repeat(${state.columns}, 80px)`;
 // タイルデータがあれば持ってきてなければtileオブジェクトを生成
 state.tiles = tilesLoad();
-// タイルの端の集合を作成
-state.rightEdge = makeRightIndexSet();
-state.leftEdge = makeLeftIndexSet();
-state.bottomEdge = makeBottomIndexSet();
+
 // タイルの見た目を生成(data-index付き)
 makeTile();
-
-
 
 //""""""""""""""" < メイン処理 > """""""""""""""
 
