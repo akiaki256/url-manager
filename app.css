@@ -21,7 +21,7 @@ main .section-tiles {
     display: grid;
     justify-content: center;
     padding: 20px;
-    grid-template-columns: repeat(20, 80px);
+    /*grid-template-columns: JSから制御;*/
     align-content: flex-start;
     gap: 8px;
 

@@ -22,7 +22,6 @@ function noneOneDate() {
     };
     return oneData;
 } 
-
 // タイル配列をローカルストレージから読み込む。なければ新たに配列を作成
 function tilesLoad() {
     const saved = localStorage.getItem("tiles");
@@ -31,189 +30,170 @@ function tilesLoad() {
         tiles = JSON.parse(saved); 
     } else {
         tiles = [];
-        const squares = 180; 
-        for (let i=0; i<squares; i++) {
-            tiles.push(noneOneDate());
-        }
+        const squares = state.columns * state.rows; 
+        for (let i=0; i<squares; i++) tiles.push(noneOneDate());
     }
     return tiles
 }
 // =============== < タイル描画の処理 > ==========================================================================================
 
+// リンクタイルのHTMLを作成。引数(index)で受け取ったindexを埋め込む
+function makeLinkTile(index) {
+    // <div class="tile link-tile">
+    //    <div class="tile-image">
+    //      <img class="tile-url-image" src="ファビコンURL">
+    //    </div>    
+    // </div>
+
+    // 全体部分： <div class="tile link-tile">
+    const tileTag = document.createElement('div');
+    tileTag.classList.add('tile', 'link-tile');
+    tileTag.dataset.index = index;         // タイルをクリックしたときに識別に使用される重要なindex
+    tileTag.draggable = true;
+    // タイルの見た目用divタグ： <div class="tile-image">
+    const tileImage = document.createElement('div');
+    tileImage.classList.add('tile-image');
+    // ファビコン部分： <img class="tile-url-image" src="ファビコンURL">
+    const urlImage = document.createElement('img');
+    urlImage.classList.add('tile-url-image');
+    urlImage.src = convertToFavicon(state.tiles[index].link.url); 
+    // タグを統合 
+    tileImage.append(urlImage);
+    tileTag.append(tileImage);
+    sectionTiles.append(tileTag); 
+    // もしtileOnNameがtrueかつnameが入力されていれば名前をタイル上に表示
+    if (state.tiles[index].link.tileOnName && state.tiles[index].link.name !== "") {
+        const tileOnName = document.createElement('p');
+        tileOnName.classList = 'on-name';
+        //長過ぎるnameは省略表示に変えつつ挿入
+        tileOnName.textContent = truncate(state.tiles[index].link.name, 17);
+        tileTag.append(tileOnName);
+    }
+    // 占有済みセットに追加
+    addOccupied(state.tiles[index].cells);
+}
+// テキストタイルのHTMLを作成。引数(index)で受け取ったindexを埋め込む
+function makeTextTile(index) {
+    // <div class="tile text-tile">
+    //    <div class="text-area-header">
+    //        <div class="up-down-button">
+    //            <button class"up-button"><i></i></button>
+    //            <button class"down-button"><i></i></button> 
+    //        </div>
+    //        <div class="left-right-button">
+    //            <button class"left-button"><i></i></button>
+    //            <button class"right-button"><i></i></button>  
+    //        </div>
+    //    <div/>
+    //    <div class="text-area-main">
+    //        <textarea></textarea>
+    //    </div> 
+    // <div/>
+
+    // 全体部分：<div class="tile text-tile">
+    const tileTag = document.createElement('div');
+    tileTag.classList.add('tile', 'text-tile');
+    tileTag.dataset.index = index; 
+    // ヘッダー部分：<div class="text-area-header">
+    const textAreaHeaderDiv = document.createElement('div');
+    textAreaHeaderDiv.classList.add('text-area-header');
+    textAreaHeaderDiv.draggable = true;
+    // 上下ボタン統合divタグ： <div class="up-down-button">
+    const upDownButtonDiv = document.createElement('div');
+    upDownButtonDiv.classList.add('up-down-button');
+    // 上ボタン： <button class"up-button">
+    const upButton = document.createElement('button');
+    upButton.classList.add('up-button');
+    const up = document.createElement('i');
+    up.classList.add('fa-solid', 'fa-angle-up');
+    upButton.append(up);
+    //下ボタン： <button class"down-button">
+    const downButton = document.createElement('button');
+    downButton.classList.add('down-button');
+    const down = document.createElement('i');
+    down.classList.add('fa-solid', 'fa-angle-down');
+    downButton.append(down);
+    // 左右ボタン統合divタグ： <div class="left-right-button">
+    const leftRightButtonDiv = document.createElement('div');
+    leftRightButtonDiv.classList.add('left-right-button');
+    // 左ボタン： <button class"left-button">
+    const leftButton = document.createElement('button');
+    leftButton.classList.add('left-button');
+    const left = document.createElement('i');
+    left.classList.add('fa-solid', 'fa-angle-left');
+    leftButton.append(left);
+    // 右ボタン：  <button class"right-button">
+    const rightButton = document.createElement('button');
+    rightButton.classList.add('right-button');
+    const right = document.createElement('i');
+    right.classList.add('fa-solid', 'fa-angle-right');
+    rightButton.append(right);
+    // タグを結合
+    upDownButtonDiv.append(upButton,downButton);
+    leftRightButtonDiv.append(leftButton, rightButton);
+    textAreaHeaderDiv.append(upDownButtonDiv, leftRightButtonDiv);
+    // メイン部分： <div class="text-area-main">
+    const textAreaMainDiv = document.createElement('div'); 
+    textAreaMainDiv.classList.add('text-area-main');
+    // テキストエリア： <textarea></textarea>
+    const textAreaTag = document.createElement('textarea');
+    textAreaTag.classList.add('memo-area');
+    // テキストエリアのvalueをデータから入れ込む
+    textAreaTag.value = state.tiles[index].text.memo;
+    // タグを結合
+    textAreaMainDiv.append(textAreaTag);
+    // タイル全体のタグを結合
+    tileTag.append(textAreaHeaderDiv, textAreaMainDiv);
+    sectionTiles.append(tileTag);
+    // 複数ますタイルならCSSでグリッドの設定を変更
+    if (state.tiles[index].width > 1) tileTag.style.gridColumn = `span ${state.tiles[index].width}`;
+    if (state.tiles[index].height > 1) tileTag.style.gridRow = `span ${state.tiles[index].height}`;
+    // 占有済みセットに追加
+    addOccupied(state.tiles[index].cells);
+}
+// nomeタイルのHTMLを作成。引数(index)で受け取ったindexを埋め込む
+function makeNoneTile(index) {
+    // <div class="tile link-tile">
+    //    <div class="tile-image">
+    //        <i class="fa-regular fa-square-plus"></i>
+    //    </div>    
+    // </div>
+
+    const tileTag = document.createElement('div');
+    tileTag.classList.add('tile', 'link-tile');
+    tileTag.dataset.index = index;      // タイルをクリックしたときに識別に使用される重要なindex
+    tileTag.draggable = true;
+    const tileImage = document.createElement('div');
+    tileImage.classList.add('tile-image');
+    // ファビコン画像の代わりに＋マークを入れたタイルを生成
+    const plus = document.createElement('i');
+    plus.classList.add('fa-regular', 'fa-square-plus');
+    // タグを統合 
+    tileImage.append(plus);
+    tileTag.append(tileImage);
+    sectionTiles.append(tileTag);
+}
 // タイルの見た目部分をdataにindexをふりつつを生成
-function makeTile(tiles) {
+function makeTile() {
     // 要素を初期化
     sectionTiles.innerHTML = "";
-    occupied.clear();
+    state.occupied.clear();
     // タイル生成をデータ数だけループ
-    for (let i = 0; i < tiles.length; i++) {
+    for (let i = 0; i < state.tiles.length; i++) {
         // もしoccupiedの中にiがあればこの回をスキップ(複数マスタイルに使用されているサブindexをとばしたindexが振られていく)
-        if (occupied.has(i)) continue;
-
-        // typeがlinkTileならlinkタイルを作る
-        if (tiles[i].type === "linkTile") { 
-
-            // <div class="tile link-tile">
-            //    <div class="tile-image">
-            //      <img class="tile-url-image" src="ファビコンURL">
-            //    </div>    
-            // </div>
-
-            // アイコン全体タグを作成
-            const tileTag = document.createElement('div');
-            tileTag.classList.add('tile');
-            tileTag.classList.add('link-tile')
-            tileTag.dataset.index = i;         // タイルをクリックしたときに識別に使用される重要なindex
-            tileTag.draggable = true;
-            // アイコンの見た目用<div>タグを作成
-            const tileImage = document.createElement('div');
-            tileImage.classList.add('tile-image');
-            // <img>を作成し、srcにファビコンのURL
-            const urlImage = document.createElement('img');
-            urlImage.classList.add('tile-url-image');
-            urlImage.src = convertToFavicon(tiles[i].link.url); 
-            // タグを統合 
-            tileImage.append(urlImage);
-            tileTag.append(tileImage);
-            sectionTiles.append(tileTag);  
-
-            // もしtileOnNameがtrueなら名前をタイル上に表示
-            if (tiles[i].link.tileOnName) {
-                const tileOnName = document.createElement('p');
-                tileOnName.classList = 'on-name';
-                //長過ぎるnameは省略表示に変えつつ挿入
-                tileOnName.textContent = truncate(tiles[i].link.name, 17);
-                tileTag.append(tileOnName);
-            }
-            // 占有済みセットに追加
-            addOccupied(tiles[i].cells);
-        }
-
-        // もしtypeがnoneなら空タイルを作る
-        else if (tiles[i].type === "none") {
-            // <div class="tile link-tile">
-            //    <div class="tile-image">
-            //        <i class="fa-regular fa-square-plus"></i>
-            //    </div>    
-            // </div>
-
-            // リンクタイルの外側を流用
-            const tileTag = document.createElement('div');
-            tileTag.classList.add('tile');
-            tileTag.classList.add('link-tile')
-            // タイルをクリックしたときに識別に使用される重要なindex。
-            // 複数マスタイルであれば左上の基準マスのindexがこれになる
-            tileTag.dataset.index = i;         
-            tileTag.draggable = true;
-            const tileImage = document.createElement('div');
-            tileImage.classList.add('tile-image');
-            // ファビコン画像の代わりに＋マークを入れたタイルを生成
-            const plus = document.createElement('i');
-            plus.classList.add('fa-regular', 'fa-square-plus');
-            // タグを統合 
-            tileImage.append(plus);
-            tileTag.append(tileImage);
-            sectionTiles.append(tileTag);
-        }
-
-        // typeがtextTileならtextタイルを作る
-        else if (tiles[i].type === "textTile") {
-            // <div class="tile text-tile">
-            //    <div class="text-area-header">
-            //        <div class="up-down-button">
-            //            <button><i></i></button>
-            //            <button><i></i></button> 
-            //        </div>
-            //        <div class="left-right-button">
-            //            <button><i></i></button>
-            //            <button><i></i></button>  
-            //        </div>
-            //    <div/>
-            //    <div class="text-area-main">
-            //        <textarea></textarea>
-            //    </div> 
-            // <div/>
-
-            const tileTag = document.createElement('div');
-            tileTag.classList.add('tile');
-            tileTag.classList.add('text-tile');
-            tileTag.dataset.index = i; 
-            
-
-            // ヘッダー部分
-            const textAreaHeaderDiv = document.createElement('div');
-            textAreaHeaderDiv.classList.add('text-area-header');
-            textAreaHeaderDiv.draggable = true;
-
-            const upDownButtonDiv = document.createElement('div');
-            upDownButtonDiv.classList.add('up-down-button');
-
-            const upButton = document.createElement('button');
-            upButton.classList.add('up-button');
-            const up = document.createElement('i');
-            up.classList.add('fa-solid', 'fa-angle-up');
-            upButton.append(up);
-            
-            const downButton = document.createElement('button');
-            downButton.classList.add('down-button');
-            const down = document.createElement('i');
-            down.classList.add('fa-solid', 'fa-angle-down');
-            downButton.append(down);
-
-            upDownButtonDiv.append(upButton,downButton);
-
-            const leftRightButtonDiv = document.createElement('div');
-            leftRightButtonDiv.classList.add('left-right-button');
-
-            const leftButton = document.createElement('button');
-            leftButton.classList.add('left-button');
-            const left = document.createElement('i');
-            left.classList.add('fa-solid', 'fa-angle-left');
-            leftButton.append(left);
-
-            const rightButton = document.createElement('button');
-            rightButton.classList.add('right-button');
-            const right = document.createElement('i');
-            right.classList.add('fa-solid', 'fa-angle-right');
-            rightButton.append(right);
-
-            leftRightButtonDiv.append(leftButton, rightButton);
-
-            // タグを結合
-            textAreaHeaderDiv.append(upDownButtonDiv, leftRightButtonDiv);
-
-            // メイン部分
-            const textAreaMainDiv = document.createElement('div'); 
-            textAreaMainDiv.classList.add('text-area-main');
-            const textAreaTag = document.createElement('textarea');
-            textAreaTag.classList.add('memo-area');
-            // テキストエリアのvalueをデータから入れ込む
-            textAreaTag.value = tiles[i].text.memo;
-
-            // タグを結合
-            textAreaMainDiv.append(textAreaTag);
-
-            // タグを結合
-            tileTag.append(textAreaHeaderDiv, textAreaMainDiv);
-            sectionTiles.append(tileTag);
-
-            // CSS
-            if (tiles[i].width > 1) {
-                tileTag.style.gridColumn = 'span ' + tiles[i].width;
-            }
-            if (tiles[i].height > 1) {
-                tileTag.style.gridRow = 'span ' + tiles[i].height;
-            }
-            // cellsを更新して占有済みタイル集合に登録
-            addOccupied(tiles[i].cells);
-        }
+        if (state.occupied.has(i)) continue;
+        const index = i;
+        // typeを見てタイルを作る
+        if (state.tiles[index].type === "linkTile") makeLinkTile(index);
+        else if (state.tiles[index].type === "textTile") makeTextTile(index);
+        else if (state.tiles[index].type === "none") makeNoneTile(index);
     }
 }
 
 // =============== < 部品的な処理 > ==========================================================================================
 
-// eventを受け取ってindexを返す関数
-function indexFromEvent(event) {
+// 引数(event) から操作中タイルのindexを返す関数
+function getIndex(event) {
     const tile = event.target.closest('.tile');
     if (!tile) return null;
     return Number(tile.dataset.index);
@@ -221,12 +201,12 @@ function indexFromEvent(event) {
 // urlを受け取ってファビコンurlに加工して返す関数(sz=256)
 function convertToFavicon(url) {
     const domain = new URL(url).hostname;
-    const faviconUrl = 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=256';
+    const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=256`;
     return faviconUrl
 }
-// tilesを受け取ってlocalStorageに保存する関数
-function localStorageSave(tiles) {
-    localStorage.setItem("tiles", JSON.stringify(tiles));
+// tilesをlocalStorageに保存する関数
+function localStorageSave() {
+    localStorage.setItem("tiles", JSON.stringify(state.tiles));
 }
 // 長過ぎるテキスト省略表示に変える
 function truncate(text, limit) {
@@ -241,16 +221,10 @@ function resetBorder() {
         tile.style.border = "";
     }
 }
-// 引数に受け取ったcellsの中身をグローバル集合のoccupiedに入れ込む関数
-function addOccupied(list) {
-    for (const cell of list) {
-        occupied.add(cell);
-    }
-}
-// 第一引数に受け取ったリストの中身とグローバル集合のoccupiedに被りが存在していなかったらtrue、被りがあったらfalseを返す関数
+// 第一引数に受け取ったリストの中身とグローバル集合のoccupiedに被りが存在していなかったらtrue。被りがあったらfalseをリターン
 // 第二引数で判定から除外するセルを設定できる
-function CheckDuplicates(list, excludeCells) {
-    const checkSet = new Set(occupied);
+function CheckOccupied(list, excludeCells) {
+    const checkSet = new Set(state.occupied);
     for (const cell of excludeCells) {
         checkSet.delete(cell);
     }
@@ -261,145 +235,127 @@ function CheckDuplicates(list, excludeCells) {
     }
     return true;
 }
-// indexをうけとり、tiles[Index]のwidthとhightを参照して新しいcellsをリターンする関数
-function newCells(index) {
+// 引数(index, width, height)からcellsを計算してリターンする関数
+function makeCells(index, width, height) {
     const cells = [];
-    const width = tiles[index].width;
-    const height = tiles[index].height;
     for (let r=0; r<height; r++) {
         for (let c=0; c<width; c++) {
-            cells.push(index + (c) + (r*20));
+            cells.push(index + (c) + (r*state.columns));
         }
     }
     return cells;
 }
-// 画面の縁のタイルインデックスをedge集合にいれる
-function addEdgeIndex() {
-    // 右の辺
-    for (let i=0; i<9; i++) {
-        rightEdge.add(19 + (i*20));
-    }
-    // 左の辺
-    for (let i=0; i<9; i++) {
-        leftEdge.add(0 + (i*20));
-    }
-    // 下の辺
-    for (let i=0; i<20; i++) {
-        bottomEdge.add(160 + i)
-    }
 
+// =============== < setの生成 > ===========================================================================
+
+// 引数に受け取ったcellsの中身をグローバル集合のoccupiedに入れ込む関数
+function addOccupied(list) {
+    for (const cell of list) {
+        state.occupied.add(cell);
+    }
+}
+// 右の画面端の集合
+function makeRightIndexSet() {
+    const rightEdge = new Set();
+    for (let i=0; i<state.rows; i++) rightEdge.add((state.columns-1) + (i*state.columns));
+    return rightEdge;
+}
+// 左の画面端の集合
+function makeLeftIndexSet() {
+    const leftEdge = new Set();
+    for (let i=0; i<state.rows; i++) leftEdge.add(0 + (i*state.columns));
+    return leftEdge;
+}
+// 下の画面端の集合
+function makeBottomIndexSet () {
+    const bottomEdge= new Set();
+    for (let i=0; i<state.columns; i++) bottomEdge.add((state.columns*state.rows-state.columns) + i);
+    return bottomEdge;
 }
 
 // =============== < タイルをクリックしたときの処理 > ===========================================================================
 
 // タイルを左クリック時の分岐
-function tileLeftClick(tiles) {
+function tileLeftClick() {
+    const buttonMap = new Map ([
+        ['right-button', [1, 0]],
+        ['left-button', [-1, 0]],
+        ['down-button', [0, 1]],
+        ['up-button', [0, -1]],
+    ]);
     // タイルセクションにイベントをセット
     sectionTiles.addEventListener('click', (event) => {
-        console.log(event.target);
-
-        // activeIndexを更新
-        activeIndex = indexFromEvent(event); 
+        // 操作中のタイルのindexを取得
+        state.activeIndex = getIndex(event); 
+        const index = state.activeIndex;
         // タイルの上でなかったら無視
-        if (activeIndex === null) {return};
-        console.log(activeIndex);                                              // test
+        if (index === null) {return};
         // typeが"linkTile"ならリンクを開く。
-        if (tiles[activeIndex].type === "linkTile") {
-            if (tiles[activeIndex].link.anotherWindow === true) {
-                window.open(tiles[activeIndex].link.url, '_blank', 'width=1080,height=960');
+        if (state.tiles[index].type === "linkTile") {
+            if (state.tiles[index].link.anotherWindow === true) {
+                window.open(state.tiles[index].link.url, '_blank', 'width=1080,height=960');
             } else {
-                window.open(tiles[activeIndex].link.url, '_blank');
+                window.open(state.tiles[index].link.url, '_blank');
             }
         } 
         // typeが"textTile"でサイズ変更ボタンを押されていたらサイズ変更処理"
-        else if (tiles[activeIndex].type === "textTile") {
+        else if (state.tiles[index].type === "textTile") {
             const button = event.target.closest('button');
             // ボタン部分以外が押されていたら何もしない
             if (!button) return; 
-            // もし'right-button'が押されていたら
-            let width = tiles[activeIndex].width;
-            let height = tiles[activeIndex].height; 
-            if (button.classList.contains('right-button')) {
-                width += 1;
-            }
-            if (button.classList.contains('left-button')) {
-                if (width > 1) {
-                    width -= 1;
-                }
-            }
-            if (button.classList.contains('down-button')) {
-                height += 1;
-            }
-            if (button.classList.contains('up-button')) {
-                if (height > 1) {
-                    height -= 1;
-                }
-            }
-            // サイズ変更後に増えるcellsを作成
-            let cellList = [];
-            // 右へ拡大する場合の折り返し検証
-            if (width > tiles[activeIndex].width) {
-                for (const cell of tiles[activeIndex].cells) {
-                    if (rightEdge.has(cell)) {
-                        window.alert('操作範囲外です');                                  //test
-                        return;
-                    }
-                }
-                // 予定地を作成
-                for (let h=0; h<height; h++){
-                    cellList.push(activeIndex + (width-1) + (h*20));
-                }
-            }
-            //下へ拡大する場合の折り返し検証
-            if (height > tiles[activeIndex].height){
-                for (const cell of tiles[activeIndex].cells) {
-                    if (bottomEdge.has(cell)) {
-                        window.alert('操作範囲外です');                                  //test
-                        return;
-                    }
-                }
-                for (let w=0; w<width; w++) {
-                    cellList.push(activeIndex + ((height-1)*20) + w)
-                }
-            }
-            // 予定cellsがoccupiedに含まれていたらアラートを出して中断
-            if (CheckDuplicates(cellList, []) !== true) {
-                window.alert('そのタイルは使用中です')
+            // どの方向ボタンが押されたのかを定数化
+            const classname = button.classList[0];
+            // 変動させる方向
+            const value = buttonMap.get(classname);
+            let widthHeight = [state.tiles[index].width + value[0], state.tiles[index].height + value[1]];
+
+            // もしサイズ変更後のwidthかheightのどちらかが1より小さくなるならサイズは変えない
+            if (widthHeight[0] < 1 || widthHeight[1] < 1) return;
+
+            // サイズ変更後のcellsを作成
+            const cells = makeCells(index, widthHeight[0], widthHeight[1]);
+            // 折り返しがおきないかの確認
+            if (checkEdge(cells) !== true) {
+                alert('操作範囲外です');   
                 return;
             }
-            // 予定cellsをチェックして問題なければ実際のアクティブタイルに反映
-            tiles[activeIndex].width = width;
-            tiles[activeIndex].height = height;
-            // cellsを再計算する
-            tiles[activeIndex].cells = newCells(activeIndex);  
+            // 拡大先のタイルが空かをチェック
+            if (CheckOccupied(cells, state.tiles[index].cells) !== true) {
+                alert('そのタイルは使用中です');
+                return;
+            }
+            // 実際のアクティブタイルに反映
+            state.tiles[index].width = widthHeight[0];
+            state.tiles[index].height = widthHeight[1];
+            state.tiles[index].cells = cells;
             // ローカルストレージに保存
-            localStorageSave(tiles);
+            localStorageSave();
             // 新しくタイルを再構築
-            makeTile(tiles);
+            makeTile();
         }
         // typeが"none"ならタイルクリエイトメニューを開く
-        else if (tiles[activeIndex].type === "none") {
+        else if (state.tiles[index].type === "none") {
             // クリックしたタイルの枠を光らせる
-            const activeTile = document.querySelector('[data-index="' + activeIndex + '"]');
-            activeTile.style.border = "1px #37b4fe solid";
+            addBorder([index], "#37b4fe");
             // スタイルにクリックした座標を渡す
-            createPanel.style.left = event.clientX + "px";
-            createPanel.style.top = event.clientY + "px";
+            createPanel.style.left = `${event.clientX}px`;
+            createPanel.style.top = `${event.clientY}px`;
             // タイルクリエイトメニューを出す
             createPanelOpen();
         }
     });
 }
 // 右クリック時にメニューを出す
-function tileRightClick(tiles) {
+function tileRightClick() {
     // タイルセクションにイベントをセット
     sectionTiles.addEventListener("contextmenu", (event) => {
-        // activeIndexを更新
-        activeIndex = indexFromEvent(event); 
+        // 操作中のタイルのindexを取得
+        state.activeIndex = getIndex(event); 
+        const index = state.activeIndex;
         // タイルの上でなかったら無視
-        if (activeIndex === null) {return};
+        if (index === null) {return};
         //リンクタイルならメニューを出す
-        if (tiles[activeIndex].type === 'linkTile') {
+        if (state.tiles[index].type === 'linkTile') {
             // 標準メニューをブロック
             event.preventDefault(); 
             // 開いているパネルを全て閉じから処理に入る
@@ -407,18 +363,18 @@ function tileRightClick(tiles) {
             // クリックしたらパネルが閉じる層を出す
             panelOutOpen();
             // 長過ぎるurlとnameは省略表示に変えつつ挿入
-            rightclickPanelName.textContent = truncate(tiles[activeIndex].link.name, 11);
-            rightclickPanelUrl.textContent = truncate(tiles[activeIndex].link.url, 24);
-            rightclickPanelMemo.textContent = tiles[activeIndex].link.memo;
+            rightclickPanelName.textContent = truncate(state.tiles[index].link.name, 11);
+            rightclickPanelUrl.textContent = truncate(state.tiles[index].link.url, 24);
+            rightclickPanelMemo.textContent = state.tiles[index].link.memo;
             // スタイルにクリックした座標を渡す
-            rightClickPanel.style.left = event.clientX + "px";
-            rightClickPanel.style.top = event.clientY + "px";
+            rightClickPanel.style.left = `${event.clientX}px`;
+            rightClickPanel.style.top = `${event.clientY}px`;
             // "/right-click-panel"を表示させる
             rightClickPanel.classList.remove('close');
             rightClickPanel.classList.add('show');
         }
         // テキストタイルならタイル削除メニューを出す
-        else if (tiles[activeIndex].type === 'textTile') {
+        else if (state.tiles[index].type === 'textTile') {
             // ヘッダー以外（テキストエリア等）で右クリックされたら標準メニューのまま無視
             if (!event.target.closest('.text-area-header')) return;
             // 標準メニューをブロック
@@ -427,8 +383,8 @@ function tileRightClick(tiles) {
             closePanel();
             // クリックしたらパネルが閉じる層を出す
             panelOutOpen();
-            textTileRightclickPanel.style.left = event.clientX + "px";
-            textTileRightclickPanel.style.top = event.clientY + "px";
+            textTileRightclickPanel.style.left = `${event.clientX}px`;
+            textTileRightclickPanel.style.top = `${event.clientY}px`;
             // "/right-click-panel"を表示させる
             textTileRightclickPanel.classList.remove('close');
             textTileRightclickPanel.classList.add('show');
@@ -436,129 +392,88 @@ function tileRightClick(tiles) {
     });
 }
 // =============== < タイルのドラッグ操作 > ===========================================================================
-function tileDrag(tiles) {
+
+// 引数(cells)から画面右端・下端で折り返しが発生する並びであるかどうかを判定する。折り返しが起こらないならtrue。起きるならfalseをリターン。
+function checkEdge(cells) {
+    // 右端の判定
+    let right = false, left = false, bottom = false; 
+    for (const cell of cells) {
+        if (state.rightEdge.has(cell)) right = true;
+        if (state.leftEdge.has(cell)) left = true;
+        if (cell > (state.columns*state.rows-1)) bottom = true;
+    }
+    if ((right && left) || bottom) return false;
+    return true;
+}
+
+// 引数(cells, color) 第一引数で受け取ったcellsに、第二引数で指定した色のボーダーをつける。
+function addBorder(cells, color) {
+    for (const cell of cells) {
+        const dragOverTile = document.querySelector(`[data-index="${cell}"]`);
+        if (!dragOverTile) continue;   // そのセルにタイルがなければスキップ
+        dragOverTile.style.border = `1px ${color} solid`;
+    }
+}
+
+function tileDrag() {
+    // ドラッグで操作用のインデックス
+    let dragStartIndex = null;
+    let dragOverIndex = null;
+    let dragDropIndex = null;
     // イベントキャッチ：ドラッグスタート（'dragStartIndex'を、掴んだタイルのインデックスに更新）
     sectionTiles.addEventListener('dragstart', (event) => {
-        dragStartIndex = indexFromEvent(event);
+        dragStartIndex = getIndex(event);
     })
     //イベントキャッチ：ドラッグオーバー（'dragOverIndex'を、通過したタイルのインデックスに更新）
     sectionTiles.addEventListener('dragover', (event) => {
         // 標準の“ドロップ禁止”を打ち消す
         event.preventDefault(); 
         // ドラッグ操作通過中のインデックスを記録
-        dragOverIndex = indexFromEvent(event);
+        dragOverIndex = getIndex(event);
         // もしタイルの上でなければ発火を無視
         if (dragOverIndex === null) return;
         // 全タイルのボーダーをリセット
         resetBorder();
         // ドラッグ中の候補地cellsを取得
-        const optionCells = [];
-        const width = tiles[dragStartIndex].width;
-        const height = tiles[dragStartIndex].height;
-        for (let r=0; r<height; r++) {
-            for (let c=0; c<width; c++) {
-                optionCells.push(dragOverIndex + (c) + (r*20));
-            }
-        }
-        // ドロップ先で折り返しがおきないかをチェック(右端)
-        let right = false;
-        let left = false;
-        for (const one of optionCells) {
-            if (rightEdge.has(one)) {
-                right = true;
-            }
-            if (leftEdge.has(one)) {
-                left = true;
-            }
-        }
-        // ドロップ先で折り返しがおきないかをチェック(下端)
-        let down = false;
-        for (const one of optionCells) {
-            if (one > 179) {
-                down = true
-            }
-        }
-        // 占有チェック
-        let exclude = false;
-  
-        if (CheckDuplicates(optionCells, tiles[dragStartIndex].cells) === false) exclude = true;
-
-        if ((right && left) || down) {
-            const dragOverTile = document.querySelector('[data-index="' + dragOverIndex + '"]');
-            dragOverTile.style.border = "1px red solid";
-            return;
-        } else if (exclude) {
-            for (const cell of optionCells) {
-                const dragOverTile = document.querySelector('[data-index="' + cell + '"]');
-                if (!dragOverTile) continue;   // そのセルにタイルがなければスキップ
-                dragOverTile.style.border = "1px red solid";
-            } 
-        } else {
-            // 今通過中のタイルにボーダーをつける
-            for (const cell of optionCells) {
-                const dragOverTile = document.querySelector('[data-index="' + cell + '"]');
-                if (!dragOverTile) continue;   // そのセルにタイルがなければスキップ
-                dragOverTile.style.border = "1px #37b4fe solid";
-        }
-        }
+        const optionCells = makeCells(dragOverIndex, state.tiles[dragStartIndex].width, state.tiles[dragStartIndex].height); 
+        // if 候補地で折り返しが起こるなら、基準マス一個に赤ボーダーを付ける。
+        if (checkEdge(optionCells) === false) addBorder([dragOverIndex], 'red');
+        // else if 候補地に使用済みタイルがあるなら、赤ボーダーをつける
+        else if (CheckOccupied(optionCells, state.tiles[dragStartIndex].cells) === false) addBorder(optionCells, 'red');
+        // else 候補地に青ボーダーをつける
+        else addBorder(optionCells, '#37b4fe');
     })
     //イベントキャッチ：ドラッグドロップ（'dragDropIndex'を、落としたタイルのインデックスに更新）
     sectionTiles.addEventListener('drop', (event) => {
-        dragDropIndex = indexFromEvent(event);
+        dragDropIndex = getIndex(event);
         // 全タイルのボーダーをリセット
         resetBorder();
         // もしタイルの上でなければ発火を無視
         if (dragDropIndex === null) return;
         // もしスタートとドロップが同じ場所なら何もしない
         if (dragStartIndex === dragDropIndex) return;
-
         // ドロップ先の占有インデックスを計算
-        const originSite = [];
-        const originWidth = tiles[dragStartIndex].width;
-        const originHeight = tiles[dragStartIndex].height;
-        for (let r=0; r<originHeight; r++) {
-            for (let c=0; c<originWidth; c++) {
-                originSite.push(dragDropIndex + (c) + (r*20));
-            }
-        }
+        const originSite = makeCells(dragDropIndex, state.tiles[dragStartIndex].width, state.tiles[dragStartIndex].height);
         // ドロップ先で折り返しがおきないかをチェック(右端)
-        let right = false;
-        let left = false;
-        for (const one of originSite) {
-            if (rightEdge.has(one)) {
-                right = true;
-            }
-            if (leftEdge.has(one)) {
-                left = true;
-            }
-        }
-        if (right && left) {
-            window.alert('移動先に十分な空きがありません');
+        if (checkEdge(originSite) === false)  {
+            alert('移動先に十分な空きがありません');
             return;
         }
-        // ドロップ先で折り返しがおきないかをチェック(下端)
-        for (const one of originSite) {
-            if (one > 179) {
-                window.alert('移動先に十分な空きがありません');
-                return;
-            }
-        }
-        // 検証で除外するリストを作成
-        let excludeCells = tiles[dragStartIndex].cells;
         // ドロップ先に十分な空きがあるかを確認
-        if (CheckDuplicates(originSite, excludeCells) === false) {
-            window.alert('移動先に十分な空きがありません');
+        let excludeCells = state.tiles[dragStartIndex].cells; // 検証で除外するリストを作成
+        if (CheckOccupied(originSite, excludeCells) === false)  {
+            alert('移動先に十分な空きがありません');
             return;
         }
         // タイルデータを移動する
-        tiles[dragDropIndex] = tiles[dragStartIndex];
-        tiles[dragStartIndex] = noneOneDate();
+        state.tiles[dragDropIndex] = state.tiles[dragStartIndex];
+        state.tiles[dragStartIndex] = noneOneDate();
         // 移動先のcellsを再計算する
-        tiles[dragDropIndex].cells  = newCells(dragDropIndex);
+        state.tiles[dragDropIndex].cells  = makeCells(dragDropIndex, state.tiles[dragDropIndex].width, state.tiles[dragDropIndex].height);
         // localStorageに保存する
-        localStorageSave(tiles);
+        localStorageSave();
         // 新しくタイルを再構築
-        makeTile(tiles);
+        makeTile();
     })
 }
 // =============== < パネルの出しれ処理 > ===========================================================================
@@ -575,7 +490,9 @@ function createPanelOpen() {
 }
 
 // 記録パネルを出す関数(もしすでに値が入っているなら入力された状態で出す) 
-function recordPanelOpen(tiles) {
+function recordPanelOpen() {
+    // アクティブインデックスを取得
+    const index = state.activeIndex;
     // 開いているパネルを全て閉じから処理に入る
     closePanel();
     // 全タイルのボーダーをリセット
@@ -583,23 +500,23 @@ function recordPanelOpen(tiles) {
     // クリックしたらパネルが閉じる層を出す
     panelOutOpen();
     // 入力欄にtilesの値を入れる
-    urlInput.value = tiles[activeIndex].link.url;
-    nameInput.value = tiles[activeIndex].link.name;
-    memoInput.value = tiles[activeIndex].link.memo;
+    urlInput.value = state.tiles[index].link.url;
+    nameInput.value = state.tiles[index].link.name;
+    memoInput.value = state.tiles[index].link.memo;
     // もしURL空なら"img/noimage.png"を表示、URLがあればファビコン画像を取りに行って埋め込む
-    if (tiles[activeIndex].link.url === '') {
+    if (state.tiles[index].link.url === '') {
         faviconImg.src = "img/noimage.png";
     } else {
-        faviconImg.src = convertToFavicon(tiles[activeIndex].link.url);
+        faviconImg.src = convertToFavicon(state.tiles[index].link.url);
     }
     // チェックリストのcheckedをつける
-    tileOnName.checked = tiles[activeIndex].link.tileOnName;
-    anotherWindow.checked = tiles[activeIndex].link.anotherWindow;
+    tileOnName.checked = state.tiles[index].link.tileOnName;
+    anotherWindow.checked = state.tiles[index].link.anotherWindow;
     // ".record-panel"を表示させる
     recordPanel.classList.remove('close');
     recordPanel.classList.add('show'); 
 }
-// 開いている.panelを全て閉じる関数
+// .panelを全て閉じる関数
 function closePanel() {
     const panels = document.querySelectorAll(".panel");
     for (const panel of panels) {
@@ -611,7 +528,7 @@ function closePanel() {
 function panelOutOpen() {
     const panelOut = document.querySelector('.panel-background');
     panelOut.classList.remove("close");
-    panelOut.classList.add("show")
+    panelOut.classList.add("show");
 }
 
 // =============== < ボタン関係の処理 > ===========================================================================
@@ -627,17 +544,18 @@ function closeButton() {
 }
 // イベントキャッチ：text-editボタンが押されたら1*1のテキストタイルを作成
 function textEditButton() {
-    const textEditButton = document.querySelector('.text-edit-button')
+    const textEditButton = document.querySelector('.text-edit-button');
     textEditButton.addEventListener('click', () => {   
-
-        tiles[activeIndex].type = "textTile";
-        tiles[activeIndex].cells = newCells(activeIndex);
-        tiles[activeIndex].width = 1;
-        tiles[activeIndex].height = 1;
+        // アクティブインデックスを取得
+        const index = state.activeIndex;
+        state.tiles[index].type = "textTile";
+        state.tiles[index].width = 1;
+        state.tiles[index].height = 1;
+        state.tiles[index].cells = makeCells(index, 1, 1);
         // localStorageに保存する
-        localStorageSave(tiles);
+        localStorageSave();
         // 新しくタイルを再構築
-        makeTile(tiles);
+        makeTile();
         // パネルを閉じる
         closePanel();
     })
@@ -647,52 +565,54 @@ function editButton() {
     const editButtons = document.querySelectorAll('.edit-button');
     for (const button of editButtons) {
         button.addEventListener('click', () => {
-            recordPanelOpen(tiles);
+            recordPanelOpen();
         })
     }
 }
 // イベントキャッチ：DELETEボタンが押されたら
-function deleteButton(tiles)  {
+function deleteButton()  {
     const deleteButtons = document.querySelectorAll('.delete-button');
     for (const deleteButton of deleteButtons) {
         deleteButton.addEventListener('click', () => {
             // 値をtilesオブジェクトのi番目に空の値を入れる
-            tiles[activeIndex] = noneOneDate();
+            state.tiles[state.activeIndex] = noneOneDate();
             // localStorageに保存する
-            localStorageSave(tiles);
+            localStorageSave();
             // 新しくタイルを再構築
-            makeTile(tiles);
+            makeTile();
             // パネルを閉じる
             closePanel();
         })
     }
 }
 // イベントキャッチ：EDITパネル内の保存(送信)ボタンが押されたら
-function formSend(tiles) {
+function formSend() {
     form.addEventListener("submit", (event) => {
         // 再読み込み防止
         event.preventDefault(); 
+        // アクティブインデックスを取得
+        const index = state.activeIndex;
         // 'http://'で始まらないURLが入力されていたら送信を取り消す
         if (urlInput.value.startsWith('http://') || urlInput.value.startsWith('https://')) {
             // tileArrayのactionIndex番目に値を入れる
-            tiles[activeIndex].type = "linkTile";
-            tiles[activeIndex].width = 1;
-            tiles[activeIndex].height = 1;
-            tiles[activeIndex].cells = newCells(activeIndex);
-            tiles[activeIndex].link.url = urlInput.value;
-            tiles[activeIndex].link.name = nameInput.value;
-            tiles[activeIndex].link.memo = memoInput.value;
-            tiles[activeIndex].link.tileOnName = tileOnName.checked;
-            tiles[activeIndex].link.anotherWindow = anotherWindow.checked;
+            state.tiles[index].type = "linkTile";
+            state.tiles[index].width = 1;
+            state.tiles[index].height = 1;
+            state.tiles[index].cells = makeCells(index, state.tiles[index].width, state.tiles[index].height);
+            state.tiles[index].link.url = urlInput.value;
+            state.tiles[index].link.name = nameInput.value;
+            state.tiles[index].link.memo = memoInput.value;
+            state.tiles[index].link.tileOnName = tileOnName.checked;
+            state.tiles[index].link.anotherWindow = anotherWindow.checked;
             // localStorageに保存する
-            localStorageSave(tiles);
+            localStorageSave();
             // 新しくタイルを再構築
-            makeTile(tiles);
+            makeTile();
             // パネルを閉じる
             closePanel();
         } else {
             alert('URLが無効です');
-            return
+            return;
         }
     });
 }
@@ -724,18 +644,17 @@ function faviconUpdate() {
     })
 }
 
-
 // イベントキャッチ：テキストタイルにメモが入力されていたらローカルファイルに保存する
 function textTileUpdate() {
     sectionTiles.addEventListener('input', (event) => {
         // 変更されたのが memo-area(textarea)か確認
         if (!event.target.classList.contains('memo-area')) return;
         // どのタイルか特定
-        const index = indexFromEvent(event);
+        const index = getIndex(event);
         if (index === null) return;
         // そのタイルの memo を更新
-        tiles[index].text.memo = event.target.value;
-        localStorageSave(tiles);
+        state.tiles[index].text.memo = event.target.value;
+        localStorageSave();
     });
 }
 
@@ -779,42 +698,48 @@ const textTileRightclickPanel = document.querySelector('.section-textTile-rightc
 
 //""""""""""""""" < 初期値を設定 > """""""""""""""
 
-// 使用中のインデックスを記録
-const occupied = new Set(); 
-// 画面端のインデックスの集合を用意
-const rightEdge = new Set();
-const leftEdge = new Set();
-const bottomEdge= new Set();
-addEdgeIndex();
+// 状態管理用のオブジェクトを作成
+const state = {
+    tiles: [],
+    columns: 0,
+    rows: 0,
+    activeIndex: null,    // アクティブタイルのインデックス
+    occupied: new Set(),  // 使用中のインデックスを記録する集合
+    rightEdge: new Set(), // 右画面端のインデックスの集合
+    leftEdge: new Set(),  // 左画面端のインデックスの集合
+    bottomEdge: new Set(),// 下画面端のインデックスの集合
+};
+//タイルの生成数を制御
+state.columns = 20;
+state.rows = 9;
+sectionTiles.style.gridTemplateColumns = `repeat(${state.columns}, 80px)`;
 // タイルデータがあれば持ってきてなければtileオブジェクトを生成
-let tiles = tilesLoad();
+state.tiles = tilesLoad();
+// タイルの端の集合を作成
+state.rightEdge = makeRightIndexSet();
+state.leftEdge = makeLeftIndexSet();
+state.bottomEdge = makeBottomIndexSet();
 // タイルの見た目を生成(data-index付き)
-makeTile(tiles);
-// アクティブタイルのインデックス
-let activeIndex = null;
-// ドラッグで操作用のインデクス
-let dragStartIndex = null;
-let dragOverIndex = null;
-let dragDropIndex = null;
+makeTile();
 
 
 
 //""""""""""""""" < メイン処理 > """""""""""""""
 
 // イベントキャッチ：タイル左クリック
-tileLeftClick(tiles);
+tileLeftClick();
 // イベントキャッチ：タイル右クリック
-tileRightClick(tiles);
+tileRightClick();
 // イベントキャッチ：タイルのドラッグ操作
-tileDrag(tiles)
+tileDrag();
 // イベントキャッチ：✕ボタン
 closeButton();
 // イベントキャッチ：EDITボタン
-editButton()
+editButton();
 // イベントキャッチ：DELETEボタン
-deleteButton(tiles)
+deleteButton();
 // イベントキャッチ：フォーム送信ボタン
-formSend(tiles);
+formSend();
 // イベントキャッチ：パネル外が押されたら
 clickPanelOut();
 // イベントキャッチ：URL入力欄に変化があったら
