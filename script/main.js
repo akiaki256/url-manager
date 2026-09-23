@@ -175,7 +175,6 @@ function tileRightClick() {
 
 // 引数(cells)から画面右端・下端で折り返しが発生する並びであるかどうかを判定する。折り返しが起こらないならtrue。起きるならfalseをリターン。
 function checkEdge(cells) {
-    // 右端の判定
     let right = false, left = false, bottom = false; 
     for (const cell of cells) {
         if (state.rightEdge.has(cell)) right = true;
