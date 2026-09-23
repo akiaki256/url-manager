@@ -75,3 +75,32 @@ export function addBorder(cells, color) {
         dragOverTile.style.border = `1px ${color} solid`;
     }
 }
+
+//""""""""""""""" < タイルの整合性をチェックする系の関数 > """""""""""""""
+
+// 第一引数に受け取ったリストの中身とグローバル集合のoccupiedに被りが存在していなかったらtrue。被りがあったらfalseをリターン
+// 第二引数で判定から除外するセルを設定できる
+export function CheckOccupied(list, excludeCells) {
+    const checkSet = new Set(state.occupied);
+    for (const cell of excludeCells) {
+        checkSet.delete(cell);
+    }
+    for (const one of list) {
+        if (checkSet.has(one)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// 引数(cells)から画面右端・下端で折り返しが発生する並びであるかどうかを判定する。折り返しが起こらないならtrue。起きるならfalseをリターン。
+export function checkEdge(cells) {
+    let right = false, left = false, bottom = false; 
+    for (const cell of cells) {
+        if (state.rightEdge.has(cell)) right = true;
+        if (state.leftEdge.has(cell)) left = true;
+        if (cell > (state.columns*state.rows-1)) bottom = true;
+    }
+    if ((right && left) || bottom) return false;
+    return true;
+}

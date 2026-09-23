@@ -5,10 +5,8 @@ import { state } from './state.js';
 import { makeTile } from './tile-render.js';
 import { localStorageSave } from './storage.js';
 import { truncate, getIndex, makeCells, addBorder } from './utils.js';
+import { CheckOccupied, checkEdge } from './utils.js';
 import { createPanelOpen, closePanel, panelOutOpen} from './panel.js';
-
-// ファイル分割の過程で一時的にmain.jsからインポートしている形
-import { checkEdge, CheckOccupied,  } from './main.js'; 
 
 // =============== < タイルをクリックしたときの処理 > ===========================================================================
 
