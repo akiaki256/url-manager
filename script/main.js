@@ -10,14 +10,6 @@ import { closeButton, textEditButton, editButton,deleteButton, formSend, clickPa
 
 // =============== < 部品的な処理 > ==========================================================================================
 
-// 全タイルのボーダーをリセット
-export function resetBorder() {
-    const allTiles = document.querySelectorAll('.tile');
-    // 全タイルのボーダーをリセット
-    for (const tile of allTiles) {
-        tile.style.border = "";
-    }
-}
 // 第一引数に受け取ったリストの中身とグローバル集合のoccupiedに被りが存在していなかったらtrue。被りがあったらfalseをリターン
 // 第二引数で判定から除外するセルを設定できる
 export function CheckOccupied(list, excludeCells) {
@@ -45,15 +37,6 @@ export function checkEdge(cells) {
     }
     if ((right && left) || bottom) return false;
     return true;
-}
-
-// 引数(cells, color) 第一引数で受け取ったcellsに、第二引数で指定した色のボーダーをつける。
-export function addBorder(cells, color) {
-    for (const cell of cells) {
-        const dragOverTile = document.querySelector(`[data-index="${cell}"]`);
-        if (!dragOverTile) continue;   // そのセルにタイルがなければスキップ
-        dragOverTile.style.border = `1px ${color} solid`;
-    }
 }
 
 function tileDrag() {

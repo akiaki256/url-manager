@@ -55,3 +55,23 @@ export function makeCells(index, width, height) {
     }
     return cells;
 }
+
+//""""""""""""""" < CSSに変更を加える系の関数 > """""""""""""""
+
+// 全タイルのボーダーをリセット
+export function resetBorder() {
+    const allTiles = document.querySelectorAll('.tile');
+    // 全タイルのボーダーをリセット
+    for (const tile of allTiles) {
+        tile.style.border = "";
+    }
+}
+
+// 引数(cells, color) 第一引数で受け取ったcellsに、第二引数で指定した色のボーダーをつける。
+export function addBorder(cells, color) {
+    for (const cell of cells) {
+        const dragOverTile = document.querySelector(`[data-index="${cell}"]`);
+        if (!dragOverTile) continue;   // そのセルにタイルがなければスキップ
+        dragOverTile.style.border = `1px ${color} solid`;
+    }
+}

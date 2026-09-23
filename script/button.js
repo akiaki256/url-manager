@@ -3,12 +3,8 @@
 import { state } from './state.js';
 import { localStorageSave } from './storage.js';
 import { makeTile } from './tile-render.js';
-import { noneOneDate, makeCells } from './utils.js';
+import { noneOneDate, makeCells, resetBorder } from './utils.js';
 import { recordPanelOpen, closePanel } from './panel.js';
-
-// ファイル分割の過程で一時的にmain.jsからインポートしている形
-
-import { resetBorder } from './main.js';
 
 // =============== < ボタン関係の処理 > ===========================================================================
 
