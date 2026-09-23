@@ -1,5 +1,6 @@
 'use strict';
 
+import {convertToFavicon, truncate} from './utils.js'
 // =============== < タイルデータの作成 > ==========================================================================================
 
 // 中身が空っぽのデータ（一個）
@@ -198,21 +199,12 @@ function getIndex(event) {
     if (!tile) return null;
     return Number(tile.dataset.index);
 }
-// urlを受け取ってファビコンurlに加工して返す関数(sz=256)
-function convertToFavicon(url) {
-    const domain = new URL(url).hostname;
-    const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=256`;
-    return faviconUrl
-}
+
 // tilesをlocalStorageに保存する関数
 function localStorageSave() {
     localStorage.setItem("tiles", JSON.stringify(state.tiles));
 }
-// 長過ぎるテキスト省略表示に変える
-function truncate(text, limit) {
-    if (text.length <= limit) return text;
-    return text.slice(0, limit) + '...';
-}
+
 // 全タイルのボーダーをリセット
 function resetBorder() {
     const allTiles = document.querySelectorAll('.tile');
