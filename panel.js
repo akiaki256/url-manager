@@ -1,6 +1,7 @@
 'use strict';
 
 import { state } from './state.js';
+import { convertToFavicon } from './utils.js';
 import { resetBorder } from './main.js';
 
 // =============== < パネルの出しれ処理 > ===========================================================================
