@@ -1,32 +1,12 @@
 'use strict';
 
 import { state } from './state.js';
-import { convertToFavicon, truncate } from './utils.js';
+import { noneOneDate, convertToFavicon, truncate, getIndex, makeCells } from './utils.js';
 import { makeTile } from './tile-render.js';
 import { createPanelOpen, recordPanelOpen, closePanel, panelOutOpen} from './panel.js';
 
 // =============== < タイルデータの作成 > ==========================================================================================
 
-// 中身が空っぽのデータ（一個）
-function noneOneDate() {
-    const oneData = { 
-        type: "none",
-        cells: [],
-        width: 0,
-        height: 0,
-        link: {
-            url: "", 
-            name: "", 
-            memo: "", 
-            tileOnName: false, 
-            anotherWindow: false
-        },
-        text: {
-            memo: ""
-        }
-    };
-    return oneData;
-} 
 // タイル配列をローカルストレージから読み込む。なければ新たに配列を作成
 function tilesLoad() {
     const saved = localStorage.getItem("tiles");
@@ -41,15 +21,7 @@ function tilesLoad() {
     return tiles
 }
 
-
 // =============== < 部品的な処理 > ==========================================================================================
-
-// 引数(event) から操作中タイルのindexを返す関数
-function getIndex(event) {
-    const tile = event.target.closest('.tile');
-    if (!tile) return null;
-    return Number(tile.dataset.index);
-}
 
 // tilesをlocalStorageに保存する関数
 function localStorageSave() {
@@ -77,16 +49,6 @@ function CheckOccupied(list, excludeCells) {
         }
     }
     return true;
-}
-// 引数(index, width, height)からcellsを計算してリターンする関数
-function makeCells(index, width, height) {
-    const cells = [];
-    for (let r=0; r<height; r++) {
-        for (let c=0; c<width; c++) {
-            cells.push(index + (c) + (r*state.columns));
-        }
-    }
-    return cells;
 }
 
 // =============== < タイルをクリックしたときの処理 > ===========================================================================
@@ -293,7 +255,6 @@ function tileDrag() {
         makeTile();
     })
 }
-
 
 // =============== < ボタン関係の処理 > ===========================================================================
 
