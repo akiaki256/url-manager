@@ -1,6 +1,7 @@
 'use strict';
 
 import { state } from './state.js';
+import { noneOneData } from './utils.js';
 
 // =============== < localstorageの読み書きを含む処理 > ==========================================================================================
 
@@ -13,7 +14,7 @@ export function tilesLoad() {
     } else {
         tiles = [];
         const squares = state.columns * state.rows; 
-        for (let i=0; i<squares; i++) tiles.push(noneOneDate());
+        for (let i=0; i<squares; i++) tiles.push(noneOneData());
     }
     return tiles
 }

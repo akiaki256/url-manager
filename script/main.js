@@ -11,23 +11,7 @@ import { closeButton, textEditButton, editButton,deleteButton, formSend, clickPa
 
 // =============== < 処理 > ===========================================================================
 
-// イベントキャッチ：URL入力欄に変化があったら
-function faviconUpdate() {
-    urlInput.addEventListener('change', () => {
-        // ちゃんとURLの形入力されていたらファビコン画像を取りに行って埋め込む
-        if  (urlInput.value.startsWith('http://') || urlInput.value.startsWith('https://')){
-            try {
-                faviconImg.src = convertToFavicon(urlInput.value);
-            } catch {
-                faviconImg.src = "img/noimage.png";
-            }
-        }
-        // それ以外の場合は"img/noimage.png"を表示
-        else {
-            faviconImg.src = "img/noimage.png";
-        }
-    })
-}
+
 
 // イベントキャッチ：テキストタイルにメモが入力されていたらローカルファイルに保存する
 function textTileUpdate() {
@@ -52,9 +36,7 @@ function textTileUpdate() {
 
 // [main] >
 const sectionTiles = document.querySelector('.section-tiles');
-// [main] > [.section-record-panel] > [form] > [.form-main] >
-const faviconImg = document.querySelector('.favicon-img');
-const urlInput = document.querySelector('#url');
+
 
 
 //""""""""""""""" < 初期値を設定 > """""""""""""""

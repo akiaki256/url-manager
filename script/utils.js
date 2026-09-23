@@ -5,7 +5,7 @@ import { state } from './state.js';
 // =============== < 多くの場所から呼ばれる汎用的な関数 > ==========================================================================================
 
 // 中身が空っぽのデータ（一個）
-export function noneOneDate() {
+export function noneOneData() {
     const oneData = { 
         type: "none",
         cells: [],

@@ -3,7 +3,7 @@
 import { state } from './state.js';
 import { localStorageSave } from './storage.js';
 import { makeTile } from './tile-render.js';
-import { noneOneDate, makeCells, resetBorder } from './utils.js';
+import { noneOneData, makeCells, resetBorder } from './utils.js';
 import { recordPanelOpen, closePanel } from './panel.js';
 
 // =============== < ボタン関係の処理 > ===========================================================================
@@ -53,7 +53,7 @@ export function deleteButton()  {
     for (const deleteButton of deleteButtons) {
         deleteButton.addEventListener('click', () => {
             // 値をtilesオブジェクトのi番目に空の値を入れる
-            state.tiles[state.activeIndex] = noneOneDate();
+            state.tiles[state.activeIndex] = noneOneData();
             // localStorageに保存する
             localStorageSave();
             // 新しくタイルを再構築
@@ -64,6 +64,17 @@ export function deleteButton()  {
     }
 }
 
+// イベントキャッチ：パネル外が押されたら
+export function clickPanelOut() {
+    const panelOut = document.querySelector('.panel-background');
+    panelOut.addEventListener('click', () => {
+        // 全タイルのボーダーをリセット
+        resetBorder();
+        // 全パネルを非表示に
+        closePanel();
+    })
+}
+
 // イベントキャッチ：EDITパネル内の保存(送信)ボタンが押されたら
 export function formSend() {
     const form = document.querySelector('form');
@@ -71,7 +82,7 @@ export function formSend() {
     const nameInput = document.querySelector('#name');
     const memoInput = document.querySelector('#memo');
     const tileOnName = document.querySelector('#title-on-name');
-    const anotherWindow = document.querySelector
+    const anotherWindow = document.querySelector('#another-window');
     form.addEventListener("submit", (event) => {
         // 再読み込み防止
         event.preventDefault(); 
@@ -102,13 +113,24 @@ export function formSend() {
     });
 }
 
-// イベントキャッチ：パネル外が押されたら
-export function clickPanelOut() {
-    const panelOut = document.querySelector('.panel-background');
-    panelOut.addEventListener('click', () => {
-        // 全タイルのボーダーをリセット
-        resetBorder();
-        // 全パネルを非表示に
-        closePanel();
+// イベントキャッチ：URL入力欄に変化があったら
+export function faviconUpdate() {
+    // [main] > [.section-record-panel] > [form] > [.form-main] >
+    const faviconImg = document.querySelector('.favicon-img');
+    const urlInput = document.querySelector('#url');
+    urlInput.addEventListener('change', () => {
+        // ちゃんとURLの形入力されていたらファビコン画像を取りに行って埋め込む
+        if  (urlInput.value.startsWith('http://') || urlInput.value.startsWith('https://')){
+            try {
+                faviconImg.src = convertToFavicon(urlInput.value);
+            } catch {
+                faviconImg.src = "img/noimage.png";
+            }
+        }
+        // それ以外の場合は"img/noimage.png"を表示
+        else {
+            faviconImg.src = "img/noimage.png";
+        }
     })
 }
+

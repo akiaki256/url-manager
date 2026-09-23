@@ -3,7 +3,7 @@
 import { state } from './state.js';
 import { localStorageSave } from './storage.js';
 import { makeTile } from './tile-render.js';
-import { noneOneDate, getIndex, makeCells, resetBorder, addBorder, CheckOccupied, checkEdge } from './utils.js';
+import { noneOneData, getIndex, makeCells, resetBorder, addBorder, CheckOccupied, checkEdge } from './utils.js';
 
 // =============== < タイルのドラッグ操作 > ===========================================================================
 
@@ -60,7 +60,7 @@ export function tileDrag() {
         }
         // タイルデータを移動する
         state.tiles[dragDropIndex] = state.tiles[dragStartIndex];
-        state.tiles[dragStartIndex] = noneOneDate();
+        state.tiles[dragStartIndex] = noneOneData();
         // 移動先のcellsを再計算する
         state.tiles[dragDropIndex].cells  = makeCells(dragDropIndex, state.tiles[dragDropIndex].width, state.tiles[dragDropIndex].height);
         // localStorageに保存する
