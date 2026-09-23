@@ -3,6 +3,7 @@
 import { state } from './state.js';
 import { convertToFavicon, truncate } from './utils.js';
 import { makeTile } from './tile-render.js';
+import { createPanelOpen, recordPanelOpen, closePanel, panelOutOpen} from './panel.js';
 
 // =============== < タイルデータの作成 > ==========================================================================================
 
@@ -56,7 +57,7 @@ function localStorageSave() {
 }
 
 // 全タイルのボーダーをリセット
-function resetBorder() {
+export function resetBorder() {
     const allTiles = document.querySelectorAll('.tile');
     // 全タイルのボーダーをリセット
     for (const tile of allTiles) {
@@ -177,6 +178,7 @@ function tileLeftClick() {
         }
         // typeが"none"ならタイルクリエイトメニューを開く
         else if (state.tiles[index].type === "none") {
+            const createPanel = document.querySelector('.section-create-panel');
             // クリックしたタイルの枠を光らせる
             addBorder([index], "#37b4fe");
             // スタイルにクリックした座標を渡す
@@ -318,60 +320,7 @@ function tileDrag() {
         makeTile();
     })
 }
-// =============== < パネルの出しれ処理 > ===========================================================================
 
-// タイル作成パネルを出す関数
-function createPanelOpen() {
-    // 開いているパネルを全て閉じから処理に入る
-    closePanel();
-    // クリックしたらパネルが閉じる層を出す
-    panelOutOpen();
-    // ".create-panel"を表示させる
-    createPanel.classList.remove('close');
-    createPanel.classList.add('show');
-}
-
-// 記録パネルを出す関数(もしすでに値が入っているなら入力された状態で出す) 
-function recordPanelOpen() {
-    // アクティブインデックスを取得
-    const index = state.activeIndex;
-    // 開いているパネルを全て閉じから処理に入る
-    closePanel();
-    // 全タイルのボーダーをリセット
-    resetBorder();
-    // クリックしたらパネルが閉じる層を出す
-    panelOutOpen();
-    // 入力欄にtilesの値を入れる
-    urlInput.value = state.tiles[index].link.url;
-    nameInput.value = state.tiles[index].link.name;
-    memoInput.value = state.tiles[index].link.memo;
-    // もしURL空なら"img/noimage.png"を表示、URLがあればファビコン画像を取りに行って埋め込む
-    if (state.tiles[index].link.url === '') {
-        faviconImg.src = "img/noimage.png";
-    } else {
-        faviconImg.src = convertToFavicon(state.tiles[index].link.url);
-    }
-    // チェックリストのcheckedをつける
-    tileOnName.checked = state.tiles[index].link.tileOnName;
-    anotherWindow.checked = state.tiles[index].link.anotherWindow;
-    // ".record-panel"を表示させる
-    recordPanel.classList.remove('close');
-    recordPanel.classList.add('show'); 
-}
-// .panelを全て閉じる関数
-function closePanel() {
-    const panels = document.querySelectorAll(".panel");
-    for (const panel of panels) {
-        panel.classList.remove("show");
-        panel.classList.add("close");
-    }
-}
-// クリックしたらパネルが閉じるバックグラウンドを出す関数
-function panelOutOpen() {
-    const panelOut = document.querySelector('.panel-background');
-    panelOut.classList.remove("close");
-    panelOut.classList.add("show");
-}
 
 // =============== < ボタン関係の処理 > ===========================================================================
 
@@ -518,14 +467,10 @@ const rightclickPanelUrl = document.querySelector('.rightclick-panel-url');
 const rightclickPanelMemo = document.querySelector('.rightclick-panel-memo'); 
 
 
-
-
-const createPanel = document.querySelector('.section-create-panel');
-
 const textTilePanel = document.querySelector('.section-text-tile-panel');
 
 // [main] > 
-const recordPanel = document.querySelector('.section-record-panel');
+
 // [main] > [.section-record-panel] > 
 const form = document.querySelector('form');
 // [main] > [.section-record-panel] > [form] > [.form-main] >
