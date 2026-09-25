@@ -9,8 +9,8 @@ export function noneOneData() {
     const oneData = { 
         type: "none",
         cells: [],
-        width: 0,
-        height: 0,
+        width: 1,
+        height: 1,
         link: {
             url: "", 
             name: "", 

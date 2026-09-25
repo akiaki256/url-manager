@@ -13,18 +13,23 @@ export function tileDrag() {
     let dragStartIndex = null;
     let dragOverIndex = null;
     let dragDropIndex = null;
-    // イベントキャッチ：ドラッグスタート（'dragStartIndex'を、掴んだタイルのインデックスに更新）
+    // イベントキャッチ：ドラッグスタート
     sectionTiles.addEventListener('dragstart', (event) => {
+        // 'dragStartIndex'を、掴んだタイルのインデックスに更新
         dragStartIndex = getIndex(event);
     })
-    //イベントキャッチ：ドラッグオーバー（'dragOverIndex'を、通過したタイルのインデックスに更新）
+    //イベントキャッチ：ドラッグオーバー
     sectionTiles.addEventListener('dragover', (event) => {
         // 標準の“ドロップ禁止”を打ち消す
         event.preventDefault(); 
-        // ドラッグ操作通過中のインデックスを記録
+        // 掴んでるタイルがなければ無視する
+        if (dragStartIndex === null) return;
+        // 'dragOverIndex'を、通過したタイルのインデックスに更新
         dragOverIndex = getIndex(event);
         // もしタイルの上でなければ発火を無視
-        if (dragOverIndex === null) return;
+        if (dragOverIndex === null) {
+            return;
+        }
         // 全タイルのボーダーをリセット
         resetBorder();
         // ドラッグ中の候補地cellsを取得
@@ -36,15 +41,16 @@ export function tileDrag() {
         // else 候補地に青ボーダーをつける
         else addBorder(optionCells, '#37b4fe');
     })
-    //イベントキャッチ：ドラッグドロップ（'dragDropIndex'を、落としたタイルのインデックスに更新）
+    //イベントキャッチ：ドラッグドロップ
     sectionTiles.addEventListener('drop', (event) => {
+        // 掴んでるタイルがなければ無視する
+        if (dragStartIndex === null) return;
+        // （'dragDropIndex'を、落としたタイルのインデックスに更新）
         dragDropIndex = getIndex(event);
         // 全タイルのボーダーをリセット
         resetBorder();
-        // もしタイルの上でなければ発火を無視
-        if (dragDropIndex === null) return;
-        // もしスタートとドロップが同じ場所なら何もしない
-        if (dragStartIndex === dragDropIndex) return;
+        // もしタイルの上でないか、スタートとドロップが同じ場所なら何もしない
+        if (dragDropIndex === null || dragStartIndex === dragDropIndex) return;
         // ドロップ先の占有インデックスを計算
         const originSite = makeCells(dragDropIndex, state.tiles[dragStartIndex].width, state.tiles[dragStartIndex].height);
         // ドロップ先で折り返しがおきないかをチェック(右端)
@@ -67,5 +73,16 @@ export function tileDrag() {
         localStorageSave();
         // 新しくタイルを再構築
         makeTile();
+        // ドラッグインデックスを初期化する
+        dragStartIndex = null;
+        dragOverIndex = null;
+        dragDropIndex = nul
     })
+    // 正常に終わらなかったときにドラッグインデックスを初期化する
+    sectionTiles.addEventListener('dragend', () => {
+        resetBorder();
+        dragStartIndex = null;
+        dragOverIndex = null;
+        dragDropIndex = null;
+    });
 }

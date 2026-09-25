@@ -137,7 +137,6 @@ function makeNoneTile(index) {
     const tileTag = document.createElement('div');
     tileTag.classList.add('tile', 'link-tile');
     tileTag.dataset.index = index;      // タイルをクリックしたときに識別に使用される重要なindex
-    tileTag.draggable = true;
     const tileImage = document.createElement('div');
     tileImage.classList.add('tile-image');
     // ファビコン画像の代わりに＋マークを入れたタイルを生成
