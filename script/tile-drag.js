@@ -76,7 +76,7 @@ export function tileDrag() {
         // ドラッグインデックスを初期化する
         dragStartIndex = null;
         dragOverIndex = null;
-        dragDropIndex = nul
+        dragDropIndex = null;
     })
     // 正常に終わらなかったときにドラッグインデックスを初期化する
     sectionTiles.addEventListener('dragend', () => {
